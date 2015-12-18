@@ -237,12 +237,12 @@ public class BluetoothChatService {
             BluetoothServerSocket tmp = null;
 
             // Create a new listening server socket
-         /*   try {
+            try {
                 tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME, MY_UUID);
             } catch (IOException e) {
                 Log.e(TAG, "listen() failed", e);
-            }*/
-            try{
+            }
+/*            try{
             	 Method listenMethod = mAdapter.getClass().getMethod("listenUsingRfcommOn",new Class[]{int.class});
 				
 				 tmp= ( BluetoothServerSocket) listenMethod.invoke(mAdapter, Integer.valueOf( 1));
@@ -276,7 +276,7 @@ public class BluetoothChatService {
 					
 					 e.printStackTrace();
 					
-				 }
+				 }*/
             mmServerSocket = tmp;
         }
 

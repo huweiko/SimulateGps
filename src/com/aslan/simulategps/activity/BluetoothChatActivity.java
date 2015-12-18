@@ -254,6 +254,7 @@ public class BluetoothChatActivity extends Activity {
 					Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
 				switch (msg.arg1) {
 				case BluetoothChatService.STATE_CONNECTED:
+					mTitle.setText(R.string.title_connected);
 					break;
 				case BluetoothChatService.STATE_CONNECTING:
 					mTitle.setText(R.string.title_connecting);

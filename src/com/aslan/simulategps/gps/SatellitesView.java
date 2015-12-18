@@ -12,7 +12,8 @@ import android.view.SurfaceView;
 public class SatellitesView extends SurfaceView implements
 		SurfaceHolder.Callback {
 	private static final String LOG_TAG = "SatellitesView";
-
+	SurfaceHolder mHolder;
+	Context mContext;
 	 /** The thread that actually draws the animation */
     private DrawSatellitesThread thread;
  
@@ -20,11 +21,11 @@ public class SatellitesView extends SurfaceView implements
 	public SatellitesView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		setKeepScreenOn(true);
-		SurfaceHolder holder = getHolder();
-        holder.addCallback(this);
-        
+		mHolder = getHolder();
+		mHolder.addCallback(this);
+        mContext = context;
         // create thread only; it's started in surfaceCreated()
-        thread = new DrawSatellitesThread(holder, context);
+        thread = new DrawSatellitesThread(mHolder, mContext);
 	}
 
 	@Override
@@ -41,12 +42,19 @@ public class SatellitesView extends SurfaceView implements
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
+		if(thread == null){
+			thread = new DrawSatellitesThread(holder, mContext);
+		}
         thread.setRunning(true);
         thread.start();
+        
 	}
 	
 	public void repaintSatellites(List<GpsSatellite> satellites){
-		thread.repaintSatellites(satellites);
+		if(thread != null){
+			thread.repaintSatellites(satellites);
+		}
+		
 	}
 
 	@Override
@@ -59,6 +67,7 @@ public class SatellitesView extends SurfaceView implements
         while (retry) {
             try {
                 thread.join();
+                thread = null;
                 retry = false;
             } catch (InterruptedException e) {
             }
