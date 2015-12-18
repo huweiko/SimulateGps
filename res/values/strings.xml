@@ -20,11 +20,14 @@
     <string name="button_scan">设备扫描</string>
 
     <!-- Options Menu -->
-    <string name="connect">连接设备</string>
+    <string name="connect">连接蓝牙设备</string>
     <string name="discoverable">使发现的</string>
     
     <string name="myIP">192.168.1.151</string>
     <string name="port">10082</string>
     <string name="conn">连接</string>
     <string name="disconn">断开</string>
+    <string name="backgroundrun">后台运行</string>
+    <string name="close_app">关闭应用</string>
+    <string name="connect_server">连接服务器</string>
 </resources>

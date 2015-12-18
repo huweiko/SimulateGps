@@ -1,17 +1,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/action_my"
+        android:id="@+id/background_run"
         android:orderInCategory="80"
-        android:title="我的位置"/>
+        android:title="@string/backgroundrun"/>
     <item
-        android:id="@+id/action_about"
+        android:id="@+id/closeApp"
         android:orderInCategory="90"
-        android:title="关于"/>
+        android:title="@string/close_app"/>
 	<item android:id="@+id/scan"
-          android:icon="@android:drawable/ic_menu_search"
           android:title="@string/connect" />
-    <item android:id="@+id/discoverable"
-          android:icon="@android:drawable/ic_menu_mylocation"
-          android:title="@string/discoverable" />
+    <item android:id="@+id/connectServer"
+          android:title="@string/connect_server" />
 </menu>

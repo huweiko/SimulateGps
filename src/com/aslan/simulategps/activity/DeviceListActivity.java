@@ -19,6 +19,7 @@ package com.aslan.simulategps.activity;
 import java.util.Set;
 
 import com.aslan.simulategps.R;
+import com.aslan.simulategps.base.BaseActivity;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -45,7 +46,7 @@ import android.widget.AdapterView.OnItemClickListener;
  * by the user, the MAC address of the device is sent back to the parent
  * Activity in the result Intent.
  */
-public class DeviceListActivity extends Activity {
+public class DeviceListActivity extends BaseActivity {
     // Debugging
     private static final String TAG = "DeviceListActivity";
     private static final boolean D = true;
@@ -200,5 +201,36 @@ public class DeviceListActivity extends Activity {
             }
         }
     };
+
+	@Override
+	protected void thisFinish() {
+		// TODO Auto-generated method stub
+		finish();
+	}
+
+	@Override
+	protected Object getContentViewId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void IniView() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void IniLister() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void IniData() {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }

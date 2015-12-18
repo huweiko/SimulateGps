@@ -1,5 +1,6 @@
 package com.aslan.simulategps.gps;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
@@ -54,6 +55,7 @@ public class SatellitesView extends SurfaceView implements
         // it might touch the Surface after we return and explode
         boolean retry = true;
         thread.setRunning(false);
+        thread.repaintSatellites(new ArrayList<GpsSatellite>());
         while (retry) {
             try {
                 thread.join();

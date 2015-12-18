@@ -16,14 +16,39 @@
 /*����������������*/
 package com.aslan.simulategps.activity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.BluetoothChat.BluetoothChatService;
 import com.aslan.simulategps.activity.DeviceListActivity;
+import com.aslan.simulategps.base.BaseActivity;
+import com.aslan.simulategps.base.MyYAxisValueFormatter;
+import com.aslan.simulategps.gps.SatellitesView;
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.components.Legend.LegendForm;
+import com.github.mikephil.charting.components.Legend.LegendPosition;
+import com.github.mikephil.charting.components.XAxis.XAxisPosition;
+import com.github.mikephil.charting.components.YAxis.YAxisLabelPosition;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.YAxisValueFormatter;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
+import android.location.GpsSatellite;
+import android.location.GpsStatus;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -75,14 +100,10 @@ public class BluetoothChatActivity extends Activity {
 
 	// Layout Views
 	private TextView mTitle;
-	private ListView mConversationView;
-	private EditText mOutEditText;
-	private Button mSendButton;
+
 
 	// Name of the connected device
 	private String mConnectedDeviceName = null;
-	// Array adapter for the conversation thread
-	private ArrayAdapter<String> mConversationArrayAdapter;
 	// String buffer for outgoing messages
 	private StringBuffer mOutStringBuffer;
 	// Local Bluetooth adapter
@@ -90,6 +111,23 @@ public class BluetoothChatActivity extends Activity {
 	// Member object for the chat services
 	private BluetoothChatService mChatService = null;
 
+	
+	private int minTime = 1000;
+	private int minDistance = 0;
+
+	private LocationManager locationManager;
+	private SatellitesView satellitesView;
+	private TextView lonlatText;
+	private TextView gpsStatusText;
+
+	protected BarChart mChart;
+
+    private Typeface mTf;
+    protected String[] mMonths = new String[] {
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"
+    };
+	
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -101,7 +139,11 @@ public class BluetoothChatActivity extends Activity {
 		mTitle = (TextView) findViewById(R.id.title_left_text);
 		mTitle.setText(R.string.app_name);
 		mTitle = (TextView) findViewById(R.id.title_right_text);
-
+		gpsStatusText = (TextView) findViewById(R.id.gps_status_text);
+		lonlatText = (TextView) findViewById(R.id.lonlat_text);
+		satellitesView = (SatellitesView) findViewById(R.id.satellitesView);
+		registerListener();
+		initBarChart();
 		// Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -156,27 +198,6 @@ public class BluetoothChatActivity extends Activity {
 	private void setupChat() {
 		Log.d(TAG, "setupChat()");
 
-		// Initialize the array adapter for the conversation thread
-		mConversationArrayAdapter = new ArrayAdapter<String>(this,
-				R.layout.message);
-		mConversationView = (ListView) findViewById(R.id.in);
-		mConversationView.setAdapter(mConversationArrayAdapter);
-
-		// Initialize the compose field with a listener for the return key
-		mOutEditText = (EditText) findViewById(R.id.edit_text_out);
-		mOutEditText.setOnEditorActionListener(mWriteListener);
-
-		// Initialize the send button with a listener that for click events
-		mSendButton = (Button) findViewById(R.id.button_send);
-		mSendButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				// Send a message using content of the edit text widget
-				TextView view = (TextView) findViewById(R.id.edit_text_out);
-				String message = view.getText().toString();
-				sendMessage(message);
-			}
-		});
-
 		// Initialize the BluetoothChatService to perform bluetooth connections
 		mChatService = new BluetoothChatService(this, mHandler);
 
@@ -201,13 +222,14 @@ public class BluetoothChatActivity extends Activity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		unregisterListener();
 		// Stop the Bluetooth chat services
 		if (mChatService != null)
 			mChatService.stop();
 		if (D)
 			Log.e(TAG, "--- ON DESTROY ---");
 	}
-
+	//设置被连接状态
 	private void ensureDiscoverable() {
 		if (D)
 			Log.d(TAG, "ensure discoverable");
@@ -220,48 +242,7 @@ public class BluetoothChatActivity extends Activity {
 		}
 	}
 
-	/**
-	 * Sends a message.
-	 * 
-	 * @param message
-	 *            A string of text to send.
-	 */
-	private void sendMessage(String message) {
-		// Check that we're actually connected before trying anything
-		if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
-			Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT)
-					.show();
-			return;
-		}
 
-		// Check that there's actually something to send
-		if (message.length() > 0) {
-			// Get the message bytes and tell the BluetoothChatService to write
-			byte[] send = message.getBytes();
-			mChatService.write(send);
-
-			// Reset out string buffer to zero and clear the edit text field
-			mOutStringBuffer.setLength(0);
-			mOutEditText.setText(mOutStringBuffer);
-		}
-	}
-
-	// The action listener for the EditText widget, to listen for the return key
-	private TextView.OnEditorActionListener mWriteListener = new TextView.OnEditorActionListener() {
-		public boolean onEditorAction(TextView view, int actionId,
-				KeyEvent event) {
-			// If the action is a key-up event on the return key, send the
-			// message
-			if (actionId == EditorInfo.IME_NULL
-					&& event.getAction() == KeyEvent.ACTION_UP) {
-				String message = view.getText().toString();
-				sendMessage(message);
-			}
-			if (D)
-				Log.i(TAG, "END onEditorAction");
-			return true;
-		}
-	};
 
 	// The Handler that gets information back from the BluetoothChatService
 	private final Handler mHandler = new Handler() {
@@ -273,9 +254,6 @@ public class BluetoothChatActivity extends Activity {
 					Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
 				switch (msg.arg1) {
 				case BluetoothChatService.STATE_CONNECTED:
-					mTitle.setText(R.string.title_connected_to);
-					mTitle.append(mConnectedDeviceName);
-					mConversationArrayAdapter.clear();
 					break;
 				case BluetoothChatService.STATE_CONNECTING:
 					mTitle.setText(R.string.title_connecting);
@@ -287,17 +265,8 @@ public class BluetoothChatActivity extends Activity {
 				}
 				break;
 			case MESSAGE_WRITE:
-				byte[] writeBuf = (byte[]) msg.obj;
-				// construct a string from the buffer
-				String writeMessage = new String(writeBuf);
-				mConversationArrayAdapter.add("Me:  " + writeMessage);
 				break;
 			case MESSAGE_READ:
-				byte[] readBuf = (byte[]) msg.obj;
-				// construct a string from the valid bytes in the buffer
-				String readMessage = new String(readBuf, 0, msg.arg1);
-				mConversationArrayAdapter.add(mConnectedDeviceName + ":  "
-						+ readMessage);
 				break;
 			case MESSAGE_DEVICE_NAME:
 				// save the connected device's name
@@ -377,12 +346,221 @@ public class BluetoothChatActivity extends Activity {
 			Intent serverIntent = new Intent(this, DeviceListActivity.class);
 			startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
 			return true;
-		case R.id.discoverable:
+		case R.id.connectServer:
 			// Ensure this device is discoverable by others
-			ensureDiscoverable();
+			Intent tcpIntent = new Intent();
+			tcpIntent.setClass(BluetoothChatActivity.this, TcpClientActivity.class);
+			startActivity(tcpIntent);
+			return true;
+		case R.id.background_run:
+			
+			return true;
+		case R.id.closeApp:
+			// Ensure this device is discoverable by others
+			finish();
 			return true;
 		}
 		return false;
 	}
+	void initBarChart(){
+		 mChart = (BarChart) findViewById(R.id.chart1);
 
+	        mChart.setDrawBarShadow(false);
+	        mChart.setDrawValueAboveBar(true);
+
+	        mChart.setDescription("");
+
+	        // if more than 60 entries are displayed in the chart, no values will be
+	        // drawn
+	        mChart.setMaxVisibleValueCount(60);
+
+	        // scaling can now only be done on x- and y-axis separately
+	        mChart.setPinchZoom(false);
+
+	        mChart.setDrawGridBackground(false);
+	        // mChart.setDrawYLabels(false);
+
+	        mTf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
+
+	        XAxis xAxis = mChart.getXAxis();
+	        xAxis.setPosition(XAxisPosition.BOTTOM);
+	        xAxis.setTypeface(mTf);
+	        xAxis.setDrawGridLines(false);
+	        xAxis.setSpaceBetweenLabels(2);
+
+	        YAxisValueFormatter custom = new MyYAxisValueFormatter();
+
+	        YAxis leftAxis = mChart.getAxisLeft();
+	        leftAxis.setTypeface(mTf);
+	        leftAxis.setLabelCount(8, false);
+	        leftAxis.setValueFormatter(custom);
+	        leftAxis.setPosition(YAxisLabelPosition.OUTSIDE_CHART);
+	        leftAxis.setSpaceTop(15f);
+
+	        YAxis rightAxis = mChart.getAxisRight();
+	        rightAxis.setDrawGridLines(false);
+	        rightAxis.setTypeface(mTf);
+	        rightAxis.setLabelCount(8, false);
+	        rightAxis.setValueFormatter(custom);
+	        rightAxis.setSpaceTop(15f);
+
+	        Legend l = mChart.getLegend();
+	        l.setPosition(LegendPosition.BELOW_CHART_LEFT);
+	        l.setForm(LegendForm.SQUARE);
+	        l.setFormSize(9f);
+	        l.setTextSize(11f);
+	        l.setXEntrySpace(4f);
+	        // l.setExtra(ColorTemplate.VORDIPLOM_COLORS, new String[] { "abc",
+	        // "def", "ghj", "ikl", "mno" });
+	        // l.setCustom(ColorTemplate.VORDIPLOM_COLORS, new String[] { "abc",
+	        // "def", "ghj", "ikl", "mno" });
+
+	        setData(12, 50);
+	}
+	private void setData(int count, float range) {
+
+       ArrayList<String> xVals = new ArrayList<String>();
+       for (int i = 0; i < count; i++) {
+           xVals.add(mMonths[i % 12]);
+       }
+
+       ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
+
+       for (int i = 0; i < count; i++) {
+           float mult = (range + 1);
+           float val = (float) (Math.random() * mult);
+           yVals1.add(new BarEntry(val, i));
+       }
+
+       BarDataSet set1 = new BarDataSet(yVals1, "DataSet");
+       set1.setBarSpacePercent(35f);
+
+       ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
+       dataSets.add(set1);
+
+       BarData data = new BarData(xVals, dataSets);
+       data.setValueTextSize(10f);
+       data.setValueTypeface(mTf);
+
+       mChart.setData(data);
+   }
+   /**
+    * 注册监听
+    */
+	private void registerListener() {
+		if (locationManager == null) {
+			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		}
+		//侦听位置信息(经纬度变化)
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+				minTime, minDistance, locationListener);
+		// 侦听GPS状态，主要是捕获到的各个卫星的状态
+		locationManager.addGpsStatusListener(gpsStatusListener);
+		//TODO:考虑增加监听传感器中的方位数据，以使罗盘的北能自动指向真实的北向
+	}
+   /**
+    * 移除监听
+    */
+	private void unregisterListener() {
+		if (locationManager != null) {
+			locationManager.removeGpsStatusListener(gpsStatusListener);
+			locationManager.removeUpdates(locationListener);
+		}
+	}
+   /**
+    * 坐标位置监听
+    */
+	private LocationListener locationListener = new LocationListener() {
+
+		@Override
+		public void onLocationChanged(Location location) {
+			StringBuffer sb = new StringBuffer();
+			int fmt = Location.FORMAT_DEGREES;
+			sb.append(Location.convert(location.getLongitude(), fmt));
+			sb.append(" ");
+			sb.append(Location.convert(location.getLatitude(), fmt));
+			lonlatText.setText(sb.toString());
+
+		}
+
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+			gpsStatusText.setText("onStatusChanged");
+
+		}
+
+		@Override
+		public void onProviderEnabled(String provider) {
+			gpsStatusText.setText("onProviderEnabled");
+
+		}
+
+		@Override
+		public void onProviderDisabled(String provider) {
+			gpsStatusText.setText("onProviderDisabled");
+
+		}
+
+	};
+	
+   /**
+    * Gps状态监听
+    */
+	private GpsStatus.Listener gpsStatusListener = new GpsStatus.Listener() {
+		public void onGpsStatusChanged(int event) {
+			GpsStatus gpsStatus = locationManager.getGpsStatus(null);
+			switch (event) {
+			case GpsStatus.GPS_EVENT_FIRST_FIX: {
+				gpsStatusText.setText("GPS_EVENT_FIRST_FIX");
+				// 第一次定位时间UTC gps可用
+				// Log.v(TAG,"GPS is usable");
+				int i = gpsStatus.getTimeToFirstFix();
+				break;
+			}
+
+			case GpsStatus.GPS_EVENT_SATELLITE_STATUS: {// 周期的报告卫星状态
+				// 得到所有收到的卫星的信息，包括 卫星的高度角、方位角、信噪比、和伪随机号（及卫星编号）
+				Iterable<GpsSatellite> satellites = gpsStatus.getSatellites();
+
+				List<GpsSatellite> satelliteList = new ArrayList<GpsSatellite>();
+
+				for (GpsSatellite satellite : satellites) {
+					// 包括 卫星的高度角、方位角、信噪比、和伪随机号（及卫星编号）
+					/*
+					 * satellite.getElevation(); //卫星仰角
+					 * satellite.getAzimuth();   //卫星方位角 
+					 * satellite.getSnr();       //信噪比
+					 * satellite.getPrn();       //伪随机数，可以认为他就是卫星的编号
+					 * satellite.hasAlmanac();   //卫星历书 
+					 * satellite.hasEphemeris();
+					 * satellite.usedInFix();
+					 */
+					satelliteList.add(satellite);
+				}
+
+				satellitesView.repaintSatellites(satelliteList);
+				gpsStatusText.setText("GPS_EVENT_SATELLITE_STATUS:"
+						+ satelliteList.size());
+				break;
+			}
+
+			case GpsStatus.GPS_EVENT_STARTED: {
+				gpsStatusText.setText("GPS_EVENT_STARTED");
+				break;
+			}
+
+			case GpsStatus.GPS_EVENT_STOPPED: {
+				gpsStatusText.setText("GPS_EVENT_STOPPED");
+				break;
+			}
+
+			default:
+				gpsStatusText.setText("GPS_EVENT:" + event);
+				break;
+			}
+		}
+	};
+
+
+	
 }

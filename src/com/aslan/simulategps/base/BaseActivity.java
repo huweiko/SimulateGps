@@ -1,10 +1,12 @@
 package com.aslan.simulategps.base;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import com.aslan.simulategps.bean.Constant.Preference;
 import com.aslan.simulategps.dialog.CustomProgressDialog;
 
 /**
@@ -17,16 +19,13 @@ import com.aslan.simulategps.dialog.CustomProgressDialog;
 public abstract class BaseActivity extends Activity {
 	protected View mView;
 	protected CustomProgressDialog progressDialog;
+	public SharedPreferences preferences;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Object object = getContentViewId();
-		if (object instanceof Integer) {
-			mView = LayoutInflater.from(this).inflate((Integer) object, null);
-		} else if (object instanceof View) {
-			mView = (View) object;
-		}
-		setContentView(mView);
+		if (null == preferences) {
+			preferences = Preference.getSharedPreferences(this);
+		} 
 		IniView();
 		progressDialog = new CustomProgressDialog(this);
 		progressDialog.setCancelable(true);
@@ -34,7 +33,7 @@ public abstract class BaseActivity extends Activity {
 		IniLister();
 		IniData();
 	}
-
+	
 	/**
 	 * @Title: getContentViewId
 	 * @Description: 布局文件Id

@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import com.aslan.simulategps.R;
+import com.aslan.simulategps.base.BaseActivity;
+import com.aslan.simulategps.bean.Constant.Preference;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -25,7 +27,7 @@ import android.widget.Toast;
  * 4. 违反上述三种，必然宕机， 原因未知。
  */
 
-public class TcpClientActivity extends Activity {
+public class TcpClientActivity extends BaseActivity {
 
 	private Button connButton;
 	private EditText edIp;
@@ -61,9 +63,10 @@ public class TcpClientActivity extends Activity {
 		rcvdata = (EditText)findViewById(R.id.rcvdata);
 		snddata = (EditText)findViewById(R.id.snddata);
 		sndButton = (Button)findViewById(R.id.sndButton);
-		
-		edIp.setText("10.0.2.2");
-		edPort.setText("10082");
+		IPAddr = preferences.getString(Preference.SERVERIP, "192.168.0.1");
+		Port = preferences.getInt(Preference.PORT, 0);
+		edIp.setText(IPAddr);
+		edPort.setText(Port+"");
 		
 		connButton.setOnClickListener(new View.OnClickListener() {
 			
@@ -127,6 +130,10 @@ public class TcpClientActivity extends Activity {
             }
         }
     };
+    public void saveUser() {
+		preferences.edit().putString(Preference.SERVERIP, IPAddr).commit();
+		preferences.edit().putInt(Preference.PORT, Port).commit();
+	}
 
 
 	Runnable updataThread = new Runnable(){
@@ -135,6 +142,7 @@ public class TcpClientActivity extends Activity {
 		
 			try {
 				socket = new Socket(IPAddr, Port);
+				saveUser();
 				InputStream inputstream = socket.getInputStream();
 				OutputStream outputstream = socket.getOutputStream();
 							
@@ -144,7 +152,7 @@ public class TcpClientActivity extends Activity {
 				while(conn){
 					//接收网络数据并回显
 					if( (len = inputstream.read(buffer)) != -1){
-						 receiveData = new String(buffer, 0, len);
+						 receiveData = new String(buffer, 0, len,"GBK");
 						 System.out.println("当前值为：" + receiveData);
 						 outputstream.write(buffer, 0, len);
 						 
@@ -165,5 +173,42 @@ public class TcpClientActivity extends Activity {
 		}
 			
 	};
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+	};
+	@Override
+	protected Object getContentViewId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	protected void IniView() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	protected void IniLister() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	protected void IniData() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	protected void thisFinish() {
+		// TODO Auto-generated method stub
+		finish();
+	}
 
 }

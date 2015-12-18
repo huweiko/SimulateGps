@@ -15,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.Paint.Align;
 import android.location.GpsSatellite;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 public class DrawSatellitesThread extends Thread {
@@ -90,6 +91,7 @@ public class DrawSatellitesThread extends Thread {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			Log.i("huwei", "***********************");
 			try {
 				c = surfaceHolder.lockCanvas(null);
 				synchronized (surfaceHolder) {
@@ -100,6 +102,7 @@ public class DrawSatellitesThread extends Thread {
 					surfaceHolder.unlockCanvasAndPost(c);
 				}
 			}
+			
 		}
 	}
 
