@@ -19,6 +19,8 @@ package com.aslan.simulategps.BluetoothChat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 import com.aslan.simulategps.activity.BluetoothChatActivity;
@@ -235,11 +237,46 @@ public class BluetoothChatService {
             BluetoothServerSocket tmp = null;
 
             // Create a new listening server socket
-            try {
+         /*   try {
                 tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME, MY_UUID);
             } catch (IOException e) {
                 Log.e(TAG, "listen() failed", e);
-            }
+            }*/
+            try{
+            	 Method listenMethod = mAdapter.getClass().getMethod("listenUsingRfcommOn",new Class[]{int.class});
+				
+				 tmp= ( BluetoothServerSocket) listenMethod.invoke(mAdapter, Integer.valueOf( 1));
+				 }catch(SecurityException e) {
+					
+					 //TODOAuto-generated catch block
+					
+					 e.printStackTrace();
+				
+				 }catch(IllegalArgumentException e) {
+				
+					 //TODOAuto-generated catch block
+					
+					 e.printStackTrace();
+				
+				 }catch(NoSuchMethodException e) {
+				
+					 //TODOAuto-generated catch block
+					
+					 e.printStackTrace();
+				
+				 }catch(IllegalAccessException e) {
+				
+					 //TODOAuto-generated catch block
+					
+					 e.printStackTrace();
+				
+				 }catch(InvocationTargetException e) {
+				
+					 //TODOAuto-generated catch block
+					
+					 e.printStackTrace();
+					
+				 }
             mmServerSocket = tmp;
         }
 
@@ -310,11 +347,50 @@ public class BluetoothChatService {
 
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
-            try {
+      /*      try {
                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
             } catch (IOException e) {
                 Log.e(TAG, "create() failed", e);
-            }
+            }*/
+            Method m;
+
+            try{
+
+             m =device.getClass().getMethod("createRfcommSocket",new Class[] {int.class});
+
+             tmp=(BluetoothSocket) m.invoke(device,Integer.valueOf(1));
+
+             }catch(SecurityException e1) {
+
+             //TODOAuto-generated catch block
+
+             e1.printStackTrace();
+
+             }catch(NoSuchMethodException e1) {
+
+             //TODOAuto-generated catch block
+
+             e1.printStackTrace();
+
+             }catch(IllegalArgumentException e) {
+
+             //TODOAuto-generated catch block
+
+             e.printStackTrace();
+
+             }catch(IllegalAccessException e) {
+
+             //TODOAuto-generated catch block
+
+             e.printStackTrace();
+
+             }catch(InvocationTargetException e) {
+
+             //TODOAuto-generated catch block
+
+             e.printStackTrace();
+
+             }
             mmSocket = tmp;
         }
 

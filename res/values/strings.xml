@@ -3,30 +3,28 @@
 
     <string name="app_name">App定位</string>
 <!--  BluetoothChat -->
-    <string name="send">Send</string>
-    <string name="call">Call</string>
-    <string name="hang_up">hang up</string>
-    <string name="not_connected">You are not connected to a device</string>
-    <string name="bt_not_enabled_leaving">Bluetooth was not enabled. Leaving Bluetooth Chat.</string>
-    <string name="title_connecting">connecting...</string>
-    <string name="title_connected_to">connected: </string>
-    <string name="title_not_connected">not connected</string>
+    <string name="send">发送</string>
+    <string name="not_connected">你没有连接到一个设备</string>
+    <string name="bt_not_enabled_leaving">未启用蓝牙。离开蓝牙聊天。.</string>
+    <string name="title_connecting">正在连接</string>
+    <string name="title_connected_to">连接到: </string>
+    <string name="title_not_connected">没有被连接</string>
 
     <!--  DeviceListActivity -->
-    <string name="scanning">scanning for devices...</string>
-    <string name="select_device">select a device to connect</string>
-    <string name="none_paired">No devices have been paired</string>
-    <string name="none_found">No devices found</string>
-    <string name="title_paired_devices">Paired Devices</string>
-    <string name="title_other_devices">Other Available Devices</string>
-    <string name="button_scan">Scan for devices</string>
+    <string name="scanning">设备扫描…</string>
+    <string name="select_device">选择一个连接的设备</string>
+    <string name="none_paired">没有设备已配对</string>
+    <string name="none_found">没有找到设备</string>
+    <string name="title_paired_devices">配对设备</string>
+    <string name="title_other_devices">其他可用的设备</string>
+    <string name="button_scan">设备扫描</string>
 
     <!-- Options Menu -->
-    <string name="connect">Connect a device</string>
-    <string name="discoverable">Make discoverable</string>
+    <string name="connect">连接设备</string>
+    <string name="discoverable">使发现的</string>
     
     <string name="myIP">192.168.1.151</string>
     <string name="port">10082</string>
-    <string name="conn">connect</string>
-    <string name="disconn">disconnect</string>
+    <string name="conn">连接</string>
+    <string name="disconn">断开</string>
 </resources>
