@@ -9,12 +9,12 @@ import android.widget.Toast;
 
 public class CallService extends Service{  
     
-    public static final String TAG = "CallService";  
+    public static final String TAG = "BackgroundService";  
   
     @Override  
     public void onCreate() {  
         super.onCreate();  
-        //Toast.makeText(CallService.this,"calling...",Toast.LENGTH_LONG).show();
+        //Toast.makeText(BackgroundService.this,"calling...",Toast.LENGTH_LONG).show();
         Log.d(TAG, "onCreate() executed");  
     }  
   
@@ -42,7 +42,7 @@ public class CallService extends Service{
   
     @Override  
     public IBinder onBind(Intent intent) {  
-    	//Toast.makeText(CallService.this,"calling...",Toast.LENGTH_LONG).show();
+    	//Toast.makeText(BackgroundService.this,"calling...",Toast.LENGTH_LONG).show();
         return null;  
     }  
   

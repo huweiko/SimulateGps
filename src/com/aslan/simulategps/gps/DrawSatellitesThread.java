@@ -12,8 +12,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.Paint.Align;
+import android.graphics.Rect;
 import android.location.GpsSatellite;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -131,6 +133,16 @@ public class DrawSatellitesThread extends Thread {
 	private void drawBackground(Canvas canvas, int cx, int cy, int r) {
 		int x = cx - r;
 		int y = cy - r;
+        // 首先定义一个paint    
+        Paint paint1 = new Paint();    
+
+        // 绘制矩形区域-实心矩形    
+        // 设置颜色    
+        paint1.setColor(0xff0e6eb9);    
+        // 设置样式-填充    
+        paint1.setStyle(Style.FILL);    
+        // 绘制一个矩形    
+		canvas.drawRect(new Rect(0, 0, surfaceHolder.getSurfaceFrame().width(), surfaceHolder.getSurfaceFrame().height()), paint1); 
 		canvas.drawBitmap(compassBitmap, x, y, paint);
 	}
 

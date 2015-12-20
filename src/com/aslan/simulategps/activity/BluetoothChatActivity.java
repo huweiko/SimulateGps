@@ -17,10 +17,13 @@
 package com.aslan.simulategps.activity;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.BluetoothChat.BluetoothChatService;
+import com.aslan.simulategps.BluetoothChat.BluetoothTools;
+import com.aslan.simulategps.BluetoothChat.TransmitBean;
 import com.aslan.simulategps.activity.DeviceListActivity;
 import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.base.MyYAxisValueFormatter;
@@ -41,8 +44,10 @@ import com.github.mikephil.charting.formatter.YAxisValueFormatter;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
@@ -154,6 +159,12 @@ public class BluetoothChatActivity extends Activity {
 			finish();
 			return;
 		}
+		// 注册BoradcasrReceiver
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(BluetoothTools.ACTION_DATA_TO_GAME);
+		intentFilter.addAction(BluetoothTools.ACTION_CONNECT_SUCCESS);
+		intentFilter.addAction(BluetoothTools.ACTION_CONNECT_ERROR);
+		registerReceiver(broadcastReceiver, intentFilter);
 	}
 
 	@Override
@@ -214,6 +225,10 @@ public class BluetoothChatActivity extends Activity {
 
 	@Override
 	public void onStop() {
+		// 关闭后台Service
+		Intent startService = new Intent(BluetoothTools.ACTION_STOP_SERVICE);
+		sendBroadcast(startService);
+		unregisterReceiver(broadcastReceiver);
 		super.onStop();
 		if (D)
 			Log.e(TAG, "-- ON STOP --");
@@ -288,7 +303,7 @@ public class BluetoothChatActivity extends Activity {
 				// Toast.makeText(BluetoothChat.this,"calling...",Toast.LENGTH_LONG).show();
 				// BluetoothChat.this.call();
 				// Intent intent = new
-				// Intent(BluetoothChat.this,CallService.class);
+				// Intent(BluetoothChat.this,BackgroundService.class);
 				// startService(intent);
 				// telephonyService.endCall();
 				// closePhone();
@@ -416,24 +431,22 @@ public class BluetoothChatActivity extends Activity {
 	        // l.setCustom(ColorTemplate.VORDIPLOM_COLORS, new String[] { "abc",
 	        // "def", "ghj", "ikl", "mno" });
 
-	        setData(12, 50);
+	        setData(new ArrayList<GpsSatellite>());
 	}
-	private void setData(int count, float range) {
-
+	private void setData(List<GpsSatellite> list) {
+		mChart.clear();
        ArrayList<String> xVals = new ArrayList<String>();
-       for (int i = 0; i < count; i++) {
-           xVals.add(mMonths[i % 12]);
+       for (int i = 0; i < list.size(); i++) {
+           xVals.add(String.format("#%s_%s", list.get(i).getPrn(), list.get(i).getSnr()));
        }
 
        ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
 
-       for (int i = 0; i < count; i++) {
-           float mult = (range + 1);
-           float val = (float) (Math.random() * mult);
-           yVals1.add(new BarEntry(val, i));
+       for (int i = 0; i < list.size(); i++) {
+           yVals1.add(new BarEntry(list.get(i).getSnr(), i));
        }
 
-       BarDataSet set1 = new BarDataSet(yVals1, "DataSet");
+       BarDataSet set1 = new BarDataSet(yVals1, "信噪比");
        set1.setBarSpacePercent(35f);
 
        ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
@@ -445,6 +458,28 @@ public class BluetoothChatActivity extends Activity {
 
        mChart.setData(data);
    }
+	class ChartThread extends Thread{
+		BarChart l_chart;
+		boolean isRunning = true;
+		public ChartThread(BarChart chart) {
+			l_chart = chart;
+		}
+		
+		public void run(){
+			while(isRunning){
+				
+			}
+		}
+		void cancel(){
+			isRunning = false;
+			try {
+				join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	};
    /**
     * 注册监听
     */
@@ -538,7 +573,7 @@ public class BluetoothChatActivity extends Activity {
 					 */
 					satelliteList.add(satellite);
 				}
-
+				setData(satelliteList);
 				satellitesView.repaintSatellites(satelliteList);
 				gpsStatusText.setText("GPS_EVENT_SATELLITE_STATUS:"
 						+ satelliteList.size());
@@ -562,6 +597,30 @@ public class BluetoothChatActivity extends Activity {
 		}
 	};
 
+	// 广播接收器
+		private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
 
+				String action = intent.getAction();
+
+				if (BluetoothTools.ACTION_DATA_TO_GAME.equals(action)) {
+					// 接收数据
+					TransmitBean data = (TransmitBean) intent.getExtras()
+							.getSerializable(BluetoothTools.DATA);
+					String msg = "from remote " + new Date().toLocaleString()
+							+ " :\r\n" + data.getMsg() + "\r\n";
+					Log.i(TAG, msg);
+
+				} else if (BluetoothTools.ACTION_CONNECT_SUCCESS.equals(action)) {
+					// 连接成功
+					Log.i(TAG, "蓝牙连接成功");
+				}else if(BluetoothTools.ACTION_CONNECT_ERROR.equals(action)){
+					//连接失败
+					Log.i(TAG, "蓝牙连接失败");
+				}
+
+			}
+		};
 	
 }

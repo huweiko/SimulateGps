@@ -34,7 +34,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-
+//和蓝牙设备连接，并接受数据
 /**
  * This class does all the work for setting up and managing Bluetooth
  * connections with other devices. It has a thread that listens for
@@ -344,7 +344,6 @@ public class BluetoothChatService {
         public ConnectThread(BluetoothDevice device) {
             mmDevice = device;
             BluetoothSocket tmp = null;
-
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
       /*      try {
