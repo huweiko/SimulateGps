@@ -28,6 +28,8 @@ import com.aslan.simulategps.activity.DeviceListActivity;
 import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.base.MyYAxisValueFormatter;
 import com.aslan.simulategps.gps.SatellitesView;
+import com.aslan.simulategps.thread.BlueDataRecvThread;
+import com.aslan.simulategps.utils.AssetUtils;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -140,6 +142,14 @@ public class BluetoothChatActivity extends Activity {
 			Log.e(TAG, "+++ ON CREATE +++");
 
 		setContentView(R.layout.main);
+		
+		String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
+		BlueDataRecvThread mBlueDataRecvThread = new BlueDataRecvThread(getApplicationContext());
+		mBlueDataRecvThread.setRunning(true);
+		mBlueDataRecvThread.start();
+		mBlueDataRecvThread.repaintSatellites(str);
+		mBlueDataRecvThread.repaintSatellites(new String());
+		mBlueDataRecvThread.setRunning(false);
 		// Set up the custom title
 		mTitle = (TextView) findViewById(R.id.title_left_text);
 		mTitle.setText(R.string.app_name);

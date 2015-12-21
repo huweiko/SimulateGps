@@ -15,5 +15,4 @@ public class Constant {
 			return context.getSharedPreferences("SimulateGpsSharePref", Context.MODE_PRIVATE);
 		}
 	}
-
 }

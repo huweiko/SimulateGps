@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.UUID;
+import java.util.Vector;
 
 import com.aslan.simulategps.activity.BluetoothChatActivity;
 
@@ -66,6 +67,35 @@ public class BluetoothChatService {
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
+    private Vector<byte[]> mBluethData;
+    private int MINIMUM_BUFFER = 3;
+    public synchronized void addSound(byte[] sound, int nBytes){
+    	byte[] data = new byte[nBytes];
+		for (int i = 0; i < nBytes; i++) {
+			data[i] = sound[i];
+		}
+		this.mBluethData.add(data);
+	}
+    /*把连续几次获取的音频数据合并放在一个数组*/
+	private byte[] consumeSoundMessage(){
+		int counter = 0;
+		for (int i = 0; i < MINIMUM_BUFFER+1  ; i++) {
+			counter += this.mBluethData.elementAt(i).length;
+		}
+		byte[] sound = new byte[counter];
+		
+		
+		counter = 0; // removing the first block (carrier)
+		for (int i = 0; i < MINIMUM_BUFFER+1 ; i++) {
+			byte[] s = this.mBluethData.elementAt(i);
+			for (int j = 0; j < s.length; j++) {
+				sound[counter+j] = s[j];
+			}
+			counter += s.length;
+		}
+		this.mBluethData.clear();
+		return sound;
+	}
     /**
      * Constructor. Prepares a new BluetoothChat session.
      * @param context  The UI Activity Context
@@ -75,6 +105,7 @@ public class BluetoothChatService {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
+        this.mBluethData = new Vector<byte[]>();
     }
 
     /**
@@ -474,14 +505,8 @@ public class BluetoothChatService {
                 try {
                     // Read from the InputStream
                     bytes1 = mmInStream.read(buffer);
-                    //bytes = mmInStream.read(buffer);
-                    if(bytes1 == 0x1a) {mHandler.obtainMessage(BluetoothChatActivity.CALL_OUT)
-                        .sendToTarget();}
-                    if(bytes1 == 0x2a) {mHandler.obtainMessage(BluetoothChatActivity.Hang_UP)
-                        .sendToTarget();}
                     // Send the obtained bytes to the UI Activity
-                    else {mHandler.obtainMessage(BluetoothChatActivity.MESSAGE_READ, bytes1, -1, buffer)
-                            .sendToTarget();}
+                    addSound(buffer, bytes1);
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
