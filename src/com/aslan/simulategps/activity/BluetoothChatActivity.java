@@ -33,6 +33,7 @@ import com.aslan.simulategps.base.MyYAxisValueFormatter;
 import com.aslan.simulategps.bean.GSV;
 import com.aslan.simulategps.gps.SatellitesView;
 import com.aslan.simulategps.thread.BlueDataRecvThread;
+import com.aslan.simulategps.thread.CheckThread;
 import com.aslan.simulategps.utils.AssetUtils;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Legend;
@@ -146,6 +147,9 @@ public class BluetoothChatActivity extends BaseActivity {
 			Log.e(TAG, "+++ ON CREATE +++");
 
 		setContentView(R.layout.main);
+		CheckThread mCheckThread = new CheckThread(getApplicationContext(), mHandler);
+		mCheckThread.setRunning(true);
+		mCheckThread.start();
 /*		
 		String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
 		BlueDataRecvThread mBlueDataRecvThread = new BlueDataRecvThread(getApplicationContext(),mHandler);
@@ -334,7 +338,13 @@ public class BluetoothChatActivity extends BaseActivity {
 				satellitesView.repaintSatellites(satelliteList);
 				setData(satelliteList);
 				break;
+			case 100001:
+				Toast.makeText(getApplicationContext(),
+						"测试版试用时间到，请联系相关人员", Toast.LENGTH_SHORT)
+						.show();
+				break;
 			}
+			
 		}
 	};
 
