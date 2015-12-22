@@ -16,9 +16,12 @@
 /*����������������*/
 package com.aslan.simulategps.activity;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.BluetoothChat.BluetoothChatService;
@@ -27,6 +30,7 @@ import com.aslan.simulategps.BluetoothChat.TransmitBean;
 import com.aslan.simulategps.activity.DeviceListActivity;
 import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.base.MyYAxisValueFormatter;
+import com.aslan.simulategps.bean.GSV;
 import com.aslan.simulategps.gps.SatellitesView;
 import com.aslan.simulategps.thread.BlueDataRecvThread;
 import com.aslan.simulategps.utils.AssetUtils;
@@ -79,7 +83,7 @@ import android.widget.Toast;
 /**
  * This is the main Activity that displays the current chat session.
  */
-public class BluetoothChatActivity extends Activity {
+public class BluetoothChatActivity extends BaseActivity {
 	// Debugging
 	private static final String TAG = "BluetoothChat";
 	private static final boolean D = true;
@@ -90,8 +94,8 @@ public class BluetoothChatActivity extends Activity {
 	public static final int MESSAGE_WRITE = 3;
 	public static final int MESSAGE_DEVICE_NAME = 4;
 	public static final int MESSAGE_TOAST = 5;
-	public static final int CALL_OUT = 6;
-	public static final int Hang_UP = 7;
+	public static final int MESSAGE_SATELLITE = 6;//卫星更新
+	public static final int MESSAGE_BARCAHT = 7;//信噪比柱状图
 
 	// Key names received from the BluetoothChatService Handler
 	public static final String DEVICE_NAME = "device_name";
@@ -107,7 +111,7 @@ public class BluetoothChatActivity extends Activity {
 
 	// Layout Views
 	private TextView mTitle;
-
+	private Button mButtonSendData;
 
 	// Name of the connected device
 	private String mConnectedDeviceName = null;
@@ -142,14 +146,15 @@ public class BluetoothChatActivity extends Activity {
 			Log.e(TAG, "+++ ON CREATE +++");
 
 		setContentView(R.layout.main);
-		
+/*		
 		String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
-		BlueDataRecvThread mBlueDataRecvThread = new BlueDataRecvThread(getApplicationContext());
+		BlueDataRecvThread mBlueDataRecvThread = new BlueDataRecvThread(getApplicationContext(),mHandler);
 		mBlueDataRecvThread.setRunning(true);
 		mBlueDataRecvThread.start();
 		mBlueDataRecvThread.repaintSatellites(str);
 		mBlueDataRecvThread.repaintSatellites(new String());
 		mBlueDataRecvThread.setRunning(false);
+		*/
 		// Set up the custom title
 		mTitle = (TextView) findViewById(R.id.title_left_text);
 		mTitle.setText(R.string.app_name);
@@ -157,7 +162,21 @@ public class BluetoothChatActivity extends Activity {
 		gpsStatusText = (TextView) findViewById(R.id.gps_status_text);
 		lonlatText = (TextView) findViewById(R.id.lonlat_text);
 		satellitesView = (SatellitesView) findViewById(R.id.satellitesView);
-		registerListener();
+		mButtonSendData = (Button) findViewById(R.id.ButtonSendData);
+		mButtonSendData.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
+				try {
+					mChatService.write(str.getBytes("GBK"));
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+//		registerListener();
 		initBarChart();
 		// Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -169,12 +188,6 @@ public class BluetoothChatActivity extends Activity {
 			finish();
 			return;
 		}
-		// 注册BoradcasrReceiver
-		IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction(BluetoothTools.ACTION_DATA_TO_GAME);
-		intentFilter.addAction(BluetoothTools.ACTION_CONNECT_SUCCESS);
-		intentFilter.addAction(BluetoothTools.ACTION_CONNECT_ERROR);
-		registerReceiver(broadcastReceiver, intentFilter);
 	}
 
 	@Override
@@ -238,7 +251,6 @@ public class BluetoothChatActivity extends Activity {
 		// 关闭后台Service
 		Intent startService = new Intent(BluetoothTools.ACTION_STOP_SERVICE);
 		sendBroadcast(startService);
-		unregisterReceiver(broadcastReceiver);
 		super.onStop();
 		if (D)
 			Log.e(TAG, "-- ON STOP --");
@@ -247,7 +259,7 @@ public class BluetoothChatActivity extends Activity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		unregisterListener();
+//		unregisterListener();
 		// Stop the Bluetooth chat services
 		if (mChatService != null)
 			mChatService.stop();
@@ -306,21 +318,20 @@ public class BluetoothChatActivity extends Activity {
 						msg.getData().getString(TOAST), Toast.LENGTH_SHORT)
 						.show();
 				break;
-			case CALL_OUT:
-				Intent intent = new Intent(Intent.ACTION_CALL,
-						Uri.parse("tel:10086"));
-				BluetoothChatActivity.this.startActivity(intent);
-				// Toast.makeText(BluetoothChat.this,"calling...",Toast.LENGTH_LONG).show();
-				// BluetoothChat.this.call();
-				// Intent intent = new
-				// Intent(BluetoothChat.this,BackgroundService.class);
-				// startService(intent);
-				// telephonyService.endCall();
-				// closePhone();
+			case MESSAGE_SATELLITE:
+				List<GSV> satelliteList = new ArrayList<GSV>();
+				Map<String, GSV> ley = (Map<String, GSV>) msg.obj;
+				Iterator iter = ley.entrySet().iterator();
+				while (iter.hasNext()) {
+					Map.Entry entry = (Map.Entry) iter.next();
+					String key = (String)entry.getKey();
+					GSV val = (GSV)entry.getValue();
+					satelliteList.add(val);
+//					iter.remove();
+				}
+				satellitesView.repaintSatellites(satelliteList);
+				setData(satelliteList);
 				break;
-			case Hang_UP:
-				break;
-
 			}
 		}
 	};
@@ -441,19 +452,21 @@ public class BluetoothChatActivity extends Activity {
 	        // l.setCustom(ColorTemplate.VORDIPLOM_COLORS, new String[] { "abc",
 	        // "def", "ghj", "ikl", "mno" });
 
-	        setData(new ArrayList<GpsSatellite>());
+	        setData(new ArrayList<GSV>());
 	}
-	private void setData(List<GpsSatellite> list) {
+	private void setData(List<GSV> list) {
 		mChart.clear();
        ArrayList<String> xVals = new ArrayList<String>();
        for (int i = 0; i < list.size(); i++) {
-           xVals.add(String.format("#%s_%s", list.get(i).getPrn(), list.get(i).getSnr()));
+    	   if(!list.get(i).getXinzaobi().equals(""))
+           xVals.add(list.get(i).getBianhao()+"_"+list.get(i).getXinzaobi());
        }
 
        ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
 
        for (int i = 0; i < list.size(); i++) {
-           yVals1.add(new BarEntry(list.get(i).getSnr(), i));
+    	   if(!list.get(i).getXinzaobi().equals(""))
+           yVals1.add(new BarEntry(Integer.parseInt(list.get(i).getXinzaobi()), i));
        }
 
        BarDataSet set1 = new BarDataSet(yVals1, "信噪比");
@@ -583,8 +596,8 @@ public class BluetoothChatActivity extends Activity {
 					 */
 					satelliteList.add(satellite);
 				}
-				setData(satelliteList);
-				satellitesView.repaintSatellites(satelliteList);
+//				setData(satelliteList);
+//				satellitesView.repaintSatellites(satelliteList);
 				gpsStatusText.setText("GPS_EVENT_SATELLITE_STATUS:"
 						+ satelliteList.size());
 				break;
@@ -607,30 +620,29 @@ public class BluetoothChatActivity extends Activity {
 		}
 	};
 
-	// 广播接收器
-		private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-			@Override
-			public void onReceive(Context context, Intent intent) {
 
-				String action = intent.getAction();
-
-				if (BluetoothTools.ACTION_DATA_TO_GAME.equals(action)) {
-					// 接收数据
-					TransmitBean data = (TransmitBean) intent.getExtras()
-							.getSerializable(BluetoothTools.DATA);
-					String msg = "from remote " + new Date().toLocaleString()
-							+ " :\r\n" + data.getMsg() + "\r\n";
-					Log.i(TAG, msg);
-
-				} else if (BluetoothTools.ACTION_CONNECT_SUCCESS.equals(action)) {
-					// 连接成功
-					Log.i(TAG, "蓝牙连接成功");
-				}else if(BluetoothTools.ACTION_CONNECT_ERROR.equals(action)){
-					//连接失败
-					Log.i(TAG, "蓝牙连接失败");
-				}
-
-			}
-		};
+	@Override
+	protected Object getContentViewId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	protected void IniView() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	protected void IniLister() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	protected void IniData() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }

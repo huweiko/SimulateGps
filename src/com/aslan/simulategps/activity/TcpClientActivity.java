@@ -205,10 +205,4 @@ public class TcpClientActivity extends BaseActivity {
 	}
 
 
-	@Override
-	protected void thisFinish() {
-		// TODO Auto-generated method stub
-		finish();
-	}
-
 }

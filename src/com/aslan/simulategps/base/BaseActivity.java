@@ -58,16 +58,6 @@ public abstract class BaseActivity extends Activity {
 	 */
 	protected abstract void IniData();
 
-	/**
-	 * thisFinish 当前关闭
-	 * 
-	 */
-	protected abstract void thisFinish();
-
-	@Override
-	public void onBackPressed() {
-		thisFinish();
-	}
 
 	/**
 	 * showProgressDialog 显示等待框

@@ -25,6 +25,8 @@ import java.util.UUID;
 import java.util.Vector;
 
 import com.aslan.simulategps.activity.BluetoothChatActivity;
+import com.aslan.simulategps.thread.BlueDataRecvThread;
+import com.aslan.simulategps.utils.AssetUtils;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -69,6 +71,8 @@ public class BluetoothChatService {
 
     private Vector<byte[]> mBluethData;
     private int MINIMUM_BUFFER = 3;
+    
+    BlueDataRecvThread mBlueDataRecvThread;
     public synchronized void addSound(byte[] sound, int nBytes){
     	byte[] data = new byte[nBytes];
 		for (int i = 0; i < nBytes; i++) {
@@ -106,6 +110,10 @@ public class BluetoothChatService {
         mState = STATE_NONE;
         mHandler = handler;
         this.mBluethData = new Vector<byte[]>();
+		mBlueDataRecvThread = new BlueDataRecvThread(context,mHandler);
+		mBlueDataRecvThread.setRunning(true);
+		mBlueDataRecvThread.start();
+		
     }
 
     /**
@@ -377,12 +385,12 @@ public class BluetoothChatService {
             BluetoothSocket tmp = null;
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
-      /*      try {
+            try {
                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
             } catch (IOException e) {
                 Log.e(TAG, "create() failed", e);
-            }*/
-            Method m;
+            }
+/*            Method m;
 
             try{
 
@@ -420,7 +428,7 @@ public class BluetoothChatService {
 
              e.printStackTrace();
 
-             }
+             }*/
             mmSocket = tmp;
         }
 
@@ -486,12 +494,14 @@ public class BluetoothChatService {
             try {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
+        		
             } catch (IOException e) {
                 Log.e(TAG, "temp sockets not created", e);
             }
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+           
         }
 
         public void run() {
@@ -505,11 +515,22 @@ public class BluetoothChatService {
                 try {
                     // Read from the InputStream
                     bytes1 = mmInStream.read(buffer);
+                    Log.i("read", new String(buffer,0,bytes1,"GBK"));
+                    mBlueDataRecvThread.repaintSatellites(new String(buffer,0,bytes1,"GBK"));
                     // Send the obtained bytes to the UI Activity
-                    addSound(buffer, bytes1);
+//                    addSound(buffer, bytes1);
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
+                    
+                    mBlueDataRecvThread.setRunning(false);
+            		mBlueDataRecvThread.repaintSatellites(new String());
+            		try {
+						mBlueDataRecvThread.join();
+					} catch (InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                     break;
                 }
             }

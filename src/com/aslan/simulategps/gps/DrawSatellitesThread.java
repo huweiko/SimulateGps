@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.aslan.simulategps.R;
+import com.aslan.simulategps.bean.GSV;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -16,13 +17,15 @@ import android.graphics.Paint.Style;
 import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.Paint.Align;
 import android.graphics.Rect;
-import android.location.GpsSatellite;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
 public class DrawSatellitesThread extends Thread {
 	// 卫星图
 	private Bitmap satelliteBitmap;
+	private Bitmap GPBitmap;//美国国旗
+	private Bitmap GLBitmap;//俄罗斯过期
+	private Bitmap BDBitmap;//中国国旗
 	private Bitmap compassBitmap;
 
 	private Paint paint;
@@ -39,8 +42,8 @@ public class DrawSatellitesThread extends Thread {
 	PaintFlagsDrawFilter pfd = new PaintFlagsDrawFilter(0,
 			Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
 	
-	public static final LinkedBlockingQueue<List<GpsSatellite>> queue = 
-			new LinkedBlockingQueue<List<GpsSatellite>>(60);
+	public static final LinkedBlockingQueue<List<GSV>> queue = 
+			new LinkedBlockingQueue<List<GSV>>(60);
 
 	public DrawSatellitesThread(SurfaceHolder surfaceHolder, Context context) {
 		this.surfaceHolder = surfaceHolder;
@@ -51,6 +54,12 @@ public class DrawSatellitesThread extends Thread {
 
 		satelliteBitmap = BitmapFactory.decodeResource(res,
 				R.drawable.satellite_mark);
+		GPBitmap = BitmapFactory.decodeResource(res,
+				R.drawable.gp);
+		GLBitmap = BitmapFactory.decodeResource(res,
+				R.drawable.gl);
+		BDBitmap = BitmapFactory.decodeResource(res,
+				R.drawable.bd);
 
 		paint = new Paint();
 		paint.setSubpixelText(true);
@@ -71,7 +80,7 @@ public class DrawSatellitesThread extends Thread {
 	
 	@Override
 	public void run() {		
-		List<GpsSatellite> list=null;
+		List<GSV> list=null;
 		Canvas c = null;
 		
 		try {
@@ -113,7 +122,7 @@ public class DrawSatellitesThread extends Thread {
 		isRunning = b;
 	}
 
-	public void repaintSatellites(List<GpsSatellite> list) {
+	public void repaintSatellites(List<GSV> list) {
 		synchronized (surfaceHolder) {
 			try {
 				queue.offer(list);
@@ -187,21 +196,21 @@ public class DrawSatellitesThread extends Thread {
      * @param cy  中心圆点的Y座标
      * @param r   罗盘背景的半径
      */
-	private void drawSatellite(Canvas canvas,GpsSatellite satellite, int cx, int cy, int r) {
+	private void drawSatellite(Canvas canvas,GSV satellite, int cx, int cy, int r) {
 
 		/**
 		 * GPS卫星导航仪通常选用仰角大于5º，小于85º。 因为当卫星仰角大于85º时，L1波段的电离层折射误差较大，故规定仰角大于85º时，
 		 * 定位无效，不进行数据更新。而卫星仰角越小，则对流层折射误差越大，故一般选用仰角大于5º的卫星来定位。
 		 */
 		//得到仰角
-		float elevation = satellite.getElevation();
+		float elevation = Float.parseFloat(satellite.getYangjiao());
         //通过仰角，计算出这个卫星应该绘制到离圆心多远的位置，这里用的是角度的比值
 		double r2 = r * ((90.0f - elevation) / 90.0f);
         
 		/*得到方位角（与正北向也就是Y轴顺时针方向的夹角，注意我们通常几何上的角度
          * 是与X轴正向的逆时针方向的夹角）,在计算X，Y座标的三角函数时，要做转换
          */
-		double azimuth = satellite.getAzimuth();
+		double azimuth = Double.parseDouble(satellite.getFangweijiao());
         
 		/*
          * 转换成XY座标系中的夹角,方位角是与正北向也就是Y轴顺时针方向的夹角，
@@ -216,23 +225,33 @@ public class DrawSatellitesThread extends Thread {
 		//得到卫星图标的半径
 		int sr = satelliteBitmap.getWidth() / 2;
         //以x,y为中心绘制卫星图标
+		if(satellite.getType() == GSV.GP){
+			satelliteBitmap = GPBitmap;
+		}
+		else if(satellite.getType() == GSV.GL){
+			satelliteBitmap = GLBitmap;
+		}
+		else if(satellite.getType() == GSV.BD){
+			satelliteBitmap = BDBitmap;
+		}
+		
 		canvas.drawBitmap(satelliteBitmap, (float) (x - sr), (float) (y - sr),paint);
 		//在卫星图标的位置上绘出文字（卫星编号及信号强度）
-		int snr=(int)satellite.getSnr();
+		int snr=Integer.parseInt(satellite.getBianhao());
         int signLevel=snrToSignalLevel(snr);  //暂时不用
-		String info = String.format("#%s_%s", satellite.getPrn(), snr);
+		String info = "#"+satellite.getBianhao();
 		canvas.drawText(info, (float) (x), (float) (y), paint);
 
 	}
 
 
-	private void doDraw(Canvas canvas, List<GpsSatellite> satellites) {
+	private void doDraw(Canvas canvas, List<GSV> satellites) {
 		if (canvas != null) {
 			// 绘制背景罗盘
 			drawBackground(canvas, cx, cy, compassRadius);
 			//绘制卫星分布
 			if (satellites != null) {
-				for (GpsSatellite satellite : satellites) {
+				for (GSV satellite : satellites) {
 					drawSatellite(canvas,satellite, cx, cy, compassRadius);
 				}
 			}

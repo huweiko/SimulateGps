@@ -3,8 +3,9 @@ package com.aslan.simulategps.gps;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.aslan.simulategps.bean.GSV;
+
 import android.content.Context;
-import android.location.GpsSatellite;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -50,7 +51,7 @@ public class SatellitesView extends SurfaceView implements
         
 	}
 	
-	public void repaintSatellites(List<GpsSatellite> satellites){
+	public void repaintSatellites(List<GSV> satellites){
 		if(thread != null){
 			thread.repaintSatellites(satellites);
 		}
@@ -63,7 +64,7 @@ public class SatellitesView extends SurfaceView implements
         // it might touch the Surface after we return and explode
         boolean retry = true;
         thread.setRunning(false);
-        thread.repaintSatellites(new ArrayList<GpsSatellite>());
+        thread.repaintSatellites(new ArrayList<GSV>());
         while (retry) {
             try {
                 thread.join();
