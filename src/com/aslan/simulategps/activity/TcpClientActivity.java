@@ -3,6 +3,7 @@ package com.aslan.simulategps.activity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
 import com.aslan.simulategps.R;
@@ -124,9 +125,15 @@ public class TcpClientActivity extends BaseActivity {
             super.handleMessage(msg);
             if(msg.what == 1){
             	String receiveData = new String((String)msg.obj);
-            	rcvdata.setText((String)msg.obj);
+            	String str = (String)msg.obj;
+//            	rcvdata.setText((String)msg.obj);
             	Toast.makeText(TcpClientActivity.this, "当前值为：" + receiveData, Toast.LENGTH_SHORT).show();
-            	
+            	try {
+					BluetoothChatActivity.mChatService.write(str.getBytes("GBK"));
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
         }
     };

@@ -517,6 +517,8 @@ public class BluetoothChatService {
                     bytes1 = mmInStream.read(buffer);
                     Log.i("read", new String(buffer,0,bytes1,"GBK"));
                     mBlueDataRecvThread.repaintSatellites(new String(buffer,0,bytes1,"GBK"));
+                    mHandler.obtainMessage(BluetoothChatActivity.MESSAGE_READ, -1, -1, new String(buffer,0,bytes1,"GBK"))
+                    .sendToTarget();
                     // Send the obtained bytes to the UI Activity
 //                    addSound(buffer, bytes1);
                 } catch (IOException e) {

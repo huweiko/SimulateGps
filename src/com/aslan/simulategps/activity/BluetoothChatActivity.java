@@ -120,7 +120,7 @@ public class BluetoothChatActivity extends BaseActivity {
 	// Local Bluetooth adapter
 	private BluetoothAdapter mBluetoothAdapter = null;
 	// Member object for the chat services
-	private BluetoothChatService mChatService = null;
+	public static BluetoothChatService mChatService = null;
 
 	
 	private int minTime = 1000;
@@ -305,6 +305,8 @@ public class BluetoothChatActivity extends BaseActivity {
 			case MESSAGE_WRITE:
 				break;
 			case MESSAGE_READ:
+				String str = (String)msg.obj;
+//				Toast.makeText(BluetoothChatActivity.this, "蓝牙接收：" + str, Toast.LENGTH_SHORT).show();
 				break;
 			case MESSAGE_DEVICE_NAME:
 				// save the connected device's name
