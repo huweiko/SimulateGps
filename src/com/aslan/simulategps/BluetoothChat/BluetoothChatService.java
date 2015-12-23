@@ -488,6 +488,7 @@ public class BluetoothChatService {
         public ConnectedThread(BluetoothSocket socket) {
             Log.d(TAG, "create ConnectedThread");
             mmSocket = socket;
+            
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
 
@@ -504,7 +505,7 @@ public class BluetoothChatService {
             mmOutStream = tmpOut;
            
         }
-
+        
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
             byte[] buffer = new byte[1024];

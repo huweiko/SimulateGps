@@ -10,6 +10,7 @@ import java.util.Date;
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.bean.Constant.Preference;
+import com.aslan.simulategps.thread.NetCheckThread;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -45,7 +46,7 @@ public class TcpClientActivity extends BaseActivity {
 	Socket socket = null;
 	String IPAddr ;
 	int Port;
-	
+	NetCheckThread mNetCheckThread;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +85,10 @@ public class TcpClientActivity extends BaseActivity {
 					
 					myThread = new Thread(updataThread);
 					myThread.start();//
+					if(mNetCheckThread == null){
+						mNetCheckThread = new NetCheckThread(getApplicationContext(),IPAddr);
+						mNetCheckThread.start();
+					}
 				}else{
 					conn = false;
 					connButton.setText(R.string.conn);

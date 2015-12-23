@@ -31,6 +31,7 @@ import com.aslan.simulategps.bean.GSV;
 import com.aslan.simulategps.bean.LocationInfo;
 import com.aslan.simulategps.gps.SatellitesView;
 import com.aslan.simulategps.thread.CheckThread;
+import com.aslan.simulategps.thread.NetCheckThread;
 import com.aslan.simulategps.utils.AssetUtils;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Legend;
@@ -149,6 +150,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 		mCheckThread.setRunning(true);
 		mCheckThread.start();
 		thread.start();
+		
 /*		
 		String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
 		BlueDataRecvThread mBlueDataRecvThread = new BlueDataRecvThread(getApplicationContext(),mHandler);

@@ -2,10 +2,13 @@ package com.aslan.simulategps.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 
 import org.apache.http.util.EncodingUtils;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 public class AssetUtils {
 	public static String getDataFromAssets(Context context, String string) {
@@ -24,5 +27,23 @@ public class AssetUtils {
 			return null;
 		}
 		return result;
+	}
+	public static boolean checkNetwork(Context context) {
+        ConnectivityManager conn = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo net = conn.getActiveNetworkInfo();
+        if (net != null && net.isConnected()) {
+            return true;
+        }
+        return false;
+    }
+	public static boolean checkNetworkByIP(String ServerIP){
+		boolean state = false;
+		try {
+			InetAddress InwardAd = InetAddress.getByName(ServerIP);
+			state = InwardAd.isReachable(1000);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return state;
 	}
 }
