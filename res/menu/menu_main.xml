@@ -1,13 +1,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item
+<!--     <item
         android:id="@+id/background_run"
         android:orderInCategory="80"
         android:title="@string/backgroundrun"/>
     <item
         android:id="@+id/closeApp"
         android:orderInCategory="90"
-        android:title="@string/close_app"/>
+        android:title="@string/close_app"/> -->
 	<item android:id="@+id/scan"
           android:title="@string/connect" />
     <item android:id="@+id/connectServer"

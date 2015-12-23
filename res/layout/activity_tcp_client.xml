@@ -48,9 +48,9 @@
         android:id="@+id/myButton"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/conn" />
+        android:text="保存地址" />
     
-    <EditText
+<!--     <EditText
         android:id="@+id/rcvdata"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -70,6 +70,6 @@
         android:id="@+id/sndButton"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/send" />
+        android:text="@string/send" /> -->
 
 </LinearLayout>

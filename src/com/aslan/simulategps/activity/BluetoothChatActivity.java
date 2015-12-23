@@ -139,7 +139,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
             "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"
     };
 	
-	
+    public static NetDataRecvThread mNetDataRecvThread;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -152,9 +152,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 		mCheckThread.setRunning(true);
 		mCheckThread.start();
 		thread.start();
-		String IPAddr = preferences.getString(Preference.SERVERIP, "192.168.0.1");
-		int Port = preferences.getInt(Preference.PORT, 0);
-		NetDataRecvThread mNetDataRecvThread = new NetDataRecvThread(mContext, IPAddr, Port);
+		mNetDataRecvThread = new NetDataRecvThread(mContext);
 		mNetDataRecvThread.start();
 /*		
 		String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
@@ -409,13 +407,6 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 			Intent tcpIntent = new Intent();
 			tcpIntent.setClass(BluetoothChatActivity.this, TcpClientActivity.class);
 			startActivity(tcpIntent);
-			return true;
-		case R.id.background_run:
-			
-			return true;
-		case R.id.closeApp:
-			// Ensure this device is discoverable by others
-			finish();
 			return true;
 		}
 		return false;

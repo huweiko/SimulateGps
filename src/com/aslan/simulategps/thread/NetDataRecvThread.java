@@ -7,9 +7,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
 import com.aslan.simulategps.activity.BluetoothChatActivity;
-import com.aslan.simulategps.activity.TcpClientActivity;
+import com.aslan.simulategps.bean.Constant.Preference;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -22,17 +23,17 @@ public class NetDataRecvThread extends Thread {
 	Socket socket;
 	String IPAddr ;
 	int Port;
-	public NetDataRecvThread(Context context,String ip,int port) {
+	public SharedPreferences preferences;
+	public NetDataRecvThread(Context context) {
 		mContext = context;
-		IPAddr = ip;
-		Port = port;
+		preferences = Preference.getSharedPreferences(mContext);
+		IPAddr = preferences.getString(Preference.SERVERIP, "192.168.0.1");
+		Port = preferences.getInt(Preference.PORT, 0);
 	}
 	
 	@Override
 	public void run() {		
 		while (isRunning) {
-
-			
 			try {
 				Log.i(Tag, "Tcp连接："+IPAddr+":"+Port);
 				socket = new Socket(IPAddr, Port);
@@ -66,7 +67,7 @@ public class NetDataRecvThread extends Thread {
 					}*/
 				}
 				socket.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 			}	
 			try {
 				sleep(5000);
@@ -75,6 +76,18 @@ public class NetDataRecvThread extends Thread {
 				e.printStackTrace();
 			}
 		}
+	}
+	public void updateIP(){
+		try {
+			if(socket != null)
+				socket.close();
+			IPAddr = preferences.getString(Preference.SERVERIP, "192.168.0.1");
+			Port = preferences.getInt(Preference.PORT, 0);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	final Handler handler = new Handler(){
         @Override
@@ -94,7 +107,18 @@ public class NetDataRecvThread extends Thread {
             }
         }
     };
-
+    public void cancel(){
+    	if(socket != null){
+    		try {
+    			isRunning = false;
+				socket.close();
+				join();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    }
 	public void setRunning(boolean b) {
 		isRunning = b;
 	}

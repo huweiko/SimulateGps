@@ -36,12 +36,6 @@ public class TcpClientActivity extends BaseActivity {
 	private Button connButton;
 	private EditText edIp;
 	private EditText edPort;
-	
-	private EditText rcvdata;
-	private EditText snddata;
-	private Button sndButton;
-	
-	boolean conn = false;
 	Thread myThread = null;
 	Socket socket = null;
 	String IPAddr ;
@@ -53,20 +47,9 @@ public class TcpClientActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_tcp_client);
 
-		/*
-		if (savedInstanceState == null) {
-			getSupportFragmentManager().beginTransaction()
-					.add(R.id.container, new PlaceholderFragment()).commit();
-		}
-		*/
-		
 		connButton= (Button)findViewById(R.id.myButton);
 		edIp = (EditText)findViewById(R.id.ip);
 		edPort = (EditText)findViewById(R.id.port);
-		
-		rcvdata = (EditText)findViewById(R.id.rcvdata);
-		snddata = (EditText)findViewById(R.id.snddata);
-		sndButton = (Button)findViewById(R.id.sndButton);
 		IPAddr = preferences.getString(Preference.SERVERIP, "192.168.0.1");
 		Port = preferences.getInt(Preference.PORT, 0);
 		edIp.setText(IPAddr);
@@ -77,71 +60,46 @@ public class TcpClientActivity extends BaseActivity {
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
-				if( conn == false){
-					conn = true;
-					IPAddr = edIp.getText().toString();
-					Port = Integer.parseInt(edPort.getText().toString());
-					connButton.setText(R.string.disconn);
-					
-					myThread = new Thread(updataThread);
-					myThread.start();//
-					if(mNetCheckThread == null){
-						mNetCheckThread = new NetCheckThread(getApplicationContext(),IPAddr);
-						mNetCheckThread.start();
-					}
-				}else{
-					conn = false;
-					connButton.setText(R.string.conn);
-				}
-			}
-		});
-		
-		sndButton.setOnClickListener(new View.OnClickListener() {
-			String edData;
-			int len;
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				//未连接
-				if(conn == false){
-					System.out.println("disconnect state");
-					return;  
-				}
-				
-				edData = snddata.getText().toString();
-				len = edData.length();					
-				if( len > 0){
-					OutputStream outputStream;
-					try {
-						outputStream = socket.getOutputStream();
-						byte buff[] = edData.getBytes("GBK");
-						len = buff.length;				
-						outputStream.write(buff, 0, len);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}				
+				IPAddr = edIp.getText().toString();
+				Port = Integer.parseInt(edPort.getText().toString());
+				/*myThread = new Thread(updataThread);
+				myThread.start();*/
+				saveUser();
+				if(BluetoothChatActivity.mNetDataRecvThread != null){
+					BluetoothChatActivity.mNetDataRecvThread.updateIP();
 				}
 			}
 		});
 	}
-
+	Runnable updataThread = new Runnable(){
+		@Override
+		public void run(){
+		
+			try {
+				socket = new Socket(IPAddr, Port);
+				handler.sendEmptyMessage(1);
+				saveUser();
+				if(BluetoothChatActivity.mNetDataRecvThread != null){
+					BluetoothChatActivity.mNetDataRecvThread.updateIP();
+				}
+				socket.close();
+			} catch (IOException e) {
+				handler.sendEmptyMessage(2);
+				e.printStackTrace();
+			}	
+		}
+			
+	};
 	final Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg){
             super.handleMessage(msg);
             if(msg.what == 1){
-            	String receiveData = new String((String)msg.obj);
-            	String str = (String)msg.obj;
-//            	rcvdata.setText((String)msg.obj);
-            	Toast.makeText(TcpClientActivity.this, "当前值为：" + receiveData, Toast.LENGTH_SHORT).show();
-            	try {
-					BluetoothChatActivity.mChatService.write(str.getBytes("GBK"));
-				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+            	Toast.makeText(getApplicationContext(), "保存成功", Toast.LENGTH_SHORT).show();
             }
+            else if(msg.what == 2){
+            	Toast.makeText(getApplicationContext(), "保存失败,连接不上服务器", Toast.LENGTH_SHORT).show();
+			}
         }
     };
     public void saveUser() {
@@ -150,55 +108,7 @@ public class TcpClientActivity extends BaseActivity {
 	}
 
 
-	Runnable updataThread = new Runnable(){
-		@Override
-		public void run(){
-		
-			try {
-				socket = new Socket(IPAddr, Port);
-				saveUser();
-				InputStream inputstream = socket.getInputStream();
-				OutputStream outputstream = socket.getOutputStream();
-							
-				byte buffer[] = new byte[1024];
-				int len;
-				String receiveData ;
-				while(conn){
-					//接收网络数据并回显
-					if( (len = inputstream.read(buffer)) != -1){
-						 receiveData = new String(buffer, 0, len,"GBK");
-						 System.out.println("当前值为：" + receiveData);
-						 outputstream.write(buffer, 0, len);
-						 
-						 //发送消息到由handler处理
-						 Message message = new Message();
-		                 message.what = 1;
-		                 message.obj = receiveData;
-		                 handler.sendMessage(message);
-					}else{
-						break;
-					}
-				/*	try {
-						Thread.sleep(1000);
-						Log.i("tcp接收线程", new Date().toGMTString());
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}*/
-				}
-				socket.close();
-			} catch (IOException e) {
-				try {
-					socket.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				e.printStackTrace();
-			}	
-		}
-			
-	};
+	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
