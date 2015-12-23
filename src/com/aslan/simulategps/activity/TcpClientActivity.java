@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.util.Date;
 
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.base.BaseActivity;
@@ -14,6 +15,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -171,6 +173,13 @@ public class TcpClientActivity extends BaseActivity {
 					}else{
 						break;
 					}
+				/*	try {
+						Thread.sleep(1000);
+						Log.i("tcp接收线程", new Date().toGMTString());
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}*/
 				}
 				socket.close();
 			} catch (IOException e) {
@@ -209,6 +218,11 @@ public class TcpClientActivity extends BaseActivity {
 	protected void IniData() {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	protected void thisFinish() {
+		// TODO Auto-generated method stub
+		finish();
 	}
 
 

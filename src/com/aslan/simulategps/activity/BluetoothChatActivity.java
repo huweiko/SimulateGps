@@ -18,21 +18,18 @@ package com.aslan.simulategps.activity;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.BluetoothChat.BluetoothChatService;
-import com.aslan.simulategps.BluetoothChat.BluetoothTools;
-import com.aslan.simulategps.BluetoothChat.TransmitBean;
 import com.aslan.simulategps.activity.DeviceListActivity;
 import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.base.MyYAxisValueFormatter;
 import com.aslan.simulategps.bean.GSV;
+import com.aslan.simulategps.bean.LocationInfo;
 import com.aslan.simulategps.gps.SatellitesView;
-import com.aslan.simulategps.thread.BlueDataRecvThread;
 import com.aslan.simulategps.thread.CheckThread;
 import com.aslan.simulategps.utils.AssetUtils;
 import com.github.mikephil.charting.charts.BarChart;
@@ -49,42 +46,38 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.YAxisValueFormatter;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 /**
  * This is the main Activity that displays the current chat session.
  */
-public class BluetoothChatActivity extends BaseActivity {
+public class BluetoothChatActivity extends BaseActivity implements LocationListener{
+	Context mContext;
 	// Debugging
 	private static final String TAG = "BluetoothChat";
 	private static final boolean D = true;
@@ -97,7 +90,9 @@ public class BluetoothChatActivity extends BaseActivity {
 	public static final int MESSAGE_TOAST = 5;
 	public static final int MESSAGE_SATELLITE = 6;//卫星更新
 	public static final int MESSAGE_BARCAHT = 7;//信噪比柱状图
-
+	public static final int MESSAGE_LOCATION = 8;//定位信息
+	public static final int MESSAGE_INIT_LOCATION = 9;//初始化定位信息
+	
 	// Key names received from the BluetoothChatService Handler
 	public static final String DEVICE_NAME = "device_name";
 	public static final String TOAST = "toast";
@@ -128,6 +123,8 @@ public class BluetoothChatActivity extends BaseActivity {
 	private int minDistance = 0;
 
 	private LocationManager locationManager;
+	private String mMockProviderName = LocationManager.GPS_PROVIDER;
+	private LocationInfo mLocationInfo;
 	private SatellitesView satellitesView;
 	private TextView lonlatText;
 	private TextView gpsStatusText;
@@ -147,9 +144,11 @@ public class BluetoothChatActivity extends BaseActivity {
 			Log.e(TAG, "+++ ON CREATE +++");
 
 		setContentView(R.layout.main);
+		mContext = getApplicationContext();
 		CheckThread mCheckThread = new CheckThread(getApplicationContext(), mHandler);
 		mCheckThread.setRunning(true);
 		mCheckThread.start();
+		thread.start();
 /*		
 		String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
 		BlueDataRecvThread mBlueDataRecvThread = new BlueDataRecvThread(getApplicationContext(),mHandler);
@@ -252,9 +251,6 @@ public class BluetoothChatActivity extends BaseActivity {
 
 	@Override
 	public void onStop() {
-		// 关闭后台Service
-		Intent startService = new Intent(BluetoothTools.ACTION_STOP_SERVICE);
-		sendBroadcast(startService);
 		super.onStop();
 		if (D)
 			Log.e(TAG, "-- ON STOP --");
@@ -337,6 +333,12 @@ public class BluetoothChatActivity extends BaseActivity {
 				}
 				satellitesView.repaintSatellites(satelliteList);
 				setData(satelliteList);
+				break;
+			case MESSAGE_LOCATION:
+				mLocationInfo = (LocationInfo) msg.obj;
+				break;
+			case MESSAGE_INIT_LOCATION:
+				initLocation();
 				break;
 			case 100001:
 				Toast.makeText(getApplicationContext(),
@@ -631,7 +633,54 @@ public class BluetoothChatActivity extends BaseActivity {
 			}
 		}
 	};
+	
+	/**
+	 * inilocation 初始化 位置模拟
+	 * 
+	 */
+	private void initLocation() {
+		locationManager = (LocationManager) getApplicationContext()
+				.getSystemService(Context.LOCATION_SERVICE);
+		locationManager.addTestProvider(mMockProviderName, false, true, false,
+				false, true, true, true, 0, 5);
+		locationManager.setTestProviderEnabled(mMockProviderName, true);
+		locationManager.requestLocationUpdates(mMockProviderName, 0, 0, BluetoothChatActivity.this);
+	}
 
+	/**
+	 * setLocation 设置GPS的位置
+	 * 
+	 */
+	private void setLocation(LocationInfo locationInfo) {
+		Location location = new Location(mMockProviderName);
+		location.setTime(System.currentTimeMillis());
+		location.setLatitude(locationInfo.getLatitude());
+		location.setLongitude(locationInfo.getLongitude());
+		location.setAltitude(Float.parseFloat(locationInfo.getHeight()));
+		location.setAccuracy(Float.parseFloat(locationInfo.getLevelAccuracy()));
+		location.setBearing(180.00f);
+		location.setSpeed(200f);
+		locationManager.setTestProviderLocation(mMockProviderName, location);
+	}
+
+	Thread thread = new Thread(new Runnable() {
+	 	   public void run(){
+	 		   while(true){
+	 			   try {
+	 				   if(Settings.Secure.getInt(getContentResolver(),Settings.Secure.ALLOW_MOCK_LOCATION, 0) != 0 && (mLocationInfo != null)){
+	 					   if(locationManager == null){
+	 						  mHandler.sendEmptyMessage(MESSAGE_INIT_LOCATION);
+	 					   }else{
+	 						  setLocation(mLocationInfo);
+	 					   }
+				       }
+	 				   Thread.sleep(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+	 		   }
+	 	   }
+	});
 
 	@Override
 	protected Object getContentViewId() {
@@ -655,6 +704,56 @@ public class BluetoothChatActivity extends BaseActivity {
 	protected void IniData() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void thisFinish() {
+		// TODO Auto-generated method stub
+		AlertDialog.Builder build = new AlertDialog.Builder(this);
+		build.setTitle("提示");
+		build.setMessage("退出后，将不再提供服务，继续退出吗？");
+		build.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				ActivityManager activityMgr= (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+				activityMgr.restartPackage(mContext.getPackageName());
+				System.exit(0);
+			}
+		});
+		build.setNeutralButton("最小化", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				moveTaskToBack(true);
+			}
+		});
+		build.setNegativeButton("取消", null);
+		build.show();
 	}
 	
 }

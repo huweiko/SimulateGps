@@ -227,5 +227,11 @@ public class DeviceListActivity extends BaseActivity {
 		
 	}
 
+	@Override
+	protected void thisFinish() {
+		// TODO Auto-generated method stub
+		finish();
+	}
+
 
 }

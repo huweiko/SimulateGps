@@ -19,9 +19,10 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 
-public class BlueDataRecvThread extends Thread implements LocationListener{
+public class BlueDataRecvThread extends Thread {
 	boolean isRunning = false;
 	public static final LinkedBlockingQueue<String> queue = 
 			new LinkedBlockingQueue<String>(60);
@@ -30,27 +31,14 @@ public class BlueDataRecvThread extends Thread implements LocationListener{
 	public BlueDataRecvThread(Context context,Handler handler) {
 		mHandler = handler;
 		mContext = context;
-		initLocation();
-	    thread.start(); 
+		
 	}
-	Thread thread = new Thread(new Runnable() {
- 	   public void run(){
- 		   while(true){
- 			   try {
- 				   setLocation(mLocationInfo.getLongitude(), mLocationInfo.getLatitude());
-					sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
- 		   }
- 	   }
-    });
+	
 	GPGGA mGPGGA = new GPGGA();
 	GPRMC mGPRMC = new GPRMC();
 	LocationInfo mLocationInfo = new LocationInfo();
 	Map<String, GSV> ley = new HashMap<String, GSV>();
-	private String mMockProviderName = LocationManager.GPS_PROVIDER;
-	private LocationManager locationManager;
+	
 	@Override
 	public void run() {		
 		String list=null;
@@ -121,9 +109,9 @@ public class BlueDataRecvThread extends Thread implements LocationListener{
 			          }
 			          
 			       }
-			       
-			       
 			       mHandler.obtainMessage(BluetoothChatActivity.MESSAGE_SATELLITE, -1, -1, ley)
+			       .sendToTarget();
+			       mHandler.obtainMessage(BluetoothChatActivity.MESSAGE_LOCATION, -1, -1, mLocationInfo)
 			       .sendToTarget();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -142,60 +130,5 @@ public class BlueDataRecvThread extends Thread implements LocationListener{
 			e.printStackTrace();
 		}
 	}
-	/**
-	 * inilocation 初始化 位置模拟
-	 * 
-	 */
-	private void initLocation() {
-		locationManager = (LocationManager) mContext
-				.getSystemService(Context.LOCATION_SERVICE);
-		locationManager.addTestProvider(mMockProviderName, false, true, false,
-				false, true, true, true, 0, 5);
-		locationManager.setTestProviderEnabled(mMockProviderName, true);
-		locationManager.requestLocationUpdates(mMockProviderName, 0, 0, this);
-	}
-
-	/**
-	 * setLocation 设置GPS的位置
-	 * 
-	 */
-	private void setLocation(double longitude, double latitude) {
-		Location location = new Location(mMockProviderName);
-		location.setTime(System.currentTimeMillis());
-		location.setLatitude(latitude);
-		location.setLongitude(longitude);
-		location.setAltitude(Float.parseFloat(mLocationInfo.getHeight()));
-		location.setAccuracy(Float.parseFloat(mLocationInfo.getLevelAccuracy()));
-		location.setBearing(180.00f);
-		location.setSpeed(200f);
-		locationManager.setTestProviderLocation(mMockProviderName, location);
-	}
-
-
-	@Override
-	public void onLocationChanged(Location location) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void onProviderEnabled(String provider) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void onProviderDisabled(String provider) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 }
