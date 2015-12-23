@@ -29,9 +29,11 @@ import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.base.MyYAxisValueFormatter;
 import com.aslan.simulategps.bean.GSV;
 import com.aslan.simulategps.bean.LocationInfo;
+import com.aslan.simulategps.bean.Constant.Preference;
 import com.aslan.simulategps.gps.SatellitesView;
 import com.aslan.simulategps.thread.CheckThread;
 import com.aslan.simulategps.thread.NetCheckThread;
+import com.aslan.simulategps.thread.NetDataRecvThread;
 import com.aslan.simulategps.utils.AssetUtils;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Legend;
@@ -150,7 +152,10 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 		mCheckThread.setRunning(true);
 		mCheckThread.start();
 		thread.start();
-		
+		String IPAddr = preferences.getString(Preference.SERVERIP, "192.168.0.1");
+		int Port = preferences.getInt(Preference.PORT, 0);
+		NetDataRecvThread mNetDataRecvThread = new NetDataRecvThread(mContext, IPAddr, Port);
+		mNetDataRecvThread.start();
 /*		
 		String str = AssetUtils.getDataFromAssets(getApplicationContext(), "question.txt");
 		BlueDataRecvThread mBlueDataRecvThread = new BlueDataRecvThread(getApplicationContext(),mHandler);
@@ -664,7 +669,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 		location.setSpeed(200f);
 		locationManager.setTestProviderLocation(mMockProviderName, location);
 	}
-
+	//虚拟定位线程
 	Thread thread = new Thread(new Runnable() {
 	 	   public void run(){
 	 		   while(true){

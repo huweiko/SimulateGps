@@ -188,7 +188,12 @@ public class TcpClientActivity extends BaseActivity {
 				}
 				socket.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				try {
+					socket.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 			}	
 		}

@@ -29,6 +29,7 @@ import com.aslan.simulategps.thread.BlueDataRecvThread;
 import com.aslan.simulategps.utils.AssetUtils;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass.Device;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
@@ -45,6 +46,8 @@ import android.util.Log;
  * thread for performing data transmissions when connected.
  */
 public class BluetoothChatService {
+	Context mContext;
+	private BluetoothDevice mBluetoothDevice;
     // Debugging
     private static final String TAG = "BluetoothChatService";
     private static final boolean D = true;
@@ -110,10 +113,9 @@ public class BluetoothChatService {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
+        mContext = context;
         this.mBluethData = new Vector<byte[]>();
-		mBlueDataRecvThread = new BlueDataRecvThread(context,mHandler);
-		mBlueDataRecvThread.setRunning(true);
-		mBlueDataRecvThread.start();
+		
 		
     }
 
@@ -171,6 +173,7 @@ public class BluetoothChatService {
         if (mConnectedThread != null) {mConnectedThread.cancel(); mConnectedThread = null;}
 
         // Start the thread to connect with the given device
+        mBluetoothDevice = device;
         mConnectThread = new ConnectThread(device);
         mConnectThread.start();
         setState(STATE_CONNECTING);
@@ -192,11 +195,15 @@ public class BluetoothChatService {
 
         // Cancel the accept thread because we only want to connect to one device
         if (mAcceptThread != null) {mAcceptThread.cancel(); mAcceptThread = null;}
+        
+        if (mBlueDataRecvThread != null) {mBlueDataRecvThread.cancel(); mBlueDataRecvThread = null;}
 
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
-
+        mBlueDataRecvThread = new BlueDataRecvThread(mContext,mHandler);
+		mBlueDataRecvThread.setRunning(true);
+		mBlueDataRecvThread.start();
         // Send the name of the connected device back to the UI Activity
         Message msg = mHandler.obtainMessage(BluetoothChatActivity.MESSAGE_DEVICE_NAME);
         Bundle bundle = new Bundle();
@@ -242,12 +249,12 @@ public class BluetoothChatService {
     private void connectionFailed() {
         setState(STATE_LISTEN);
 
-        // Send a failure message back to the Activity
+  /*      // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(BluetoothChatActivity.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
         bundle.putString(BluetoothChatActivity.TOAST, "Unable to connect device");
         msg.setData(bundle);
-        mHandler.sendMessage(msg);
+        mHandler.sendMessage(msg);*/
     }
 
     /**
@@ -255,7 +262,9 @@ public class BluetoothChatService {
      */
     private void connectionLost() {
         setState(STATE_LISTEN);
-
+        if (mBlueDataRecvThread != null) {mBlueDataRecvThread.cancel(); mBlueDataRecvThread = null;}
+        if (mConnectedThread != null) {mConnectedThread.cancel(); mConnectedThread = null;}
+        connect(mBluetoothDevice);
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(BluetoothChatActivity.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
@@ -441,23 +450,21 @@ public class BluetoothChatService {
             mAdapter.cancelDiscovery();
 
             // Make a connection to the BluetoothSocket
-            try {
-                // This is a blocking call and will only return on a
-                // successful connection or an exception
-                mmSocket.connect();
-            } catch (IOException e) {
-                connectionFailed();
-                // Close the socket
-                try {
-                    mmSocket.close();
-                } catch (IOException e2) {
-                    Log.e(TAG, "unable to close() socket during connection failure", e2);
-                }
-                // Start the service over to restart listening mode
-                BluetoothChatService.this.start();
-                return;
-            }
-
+            while (true) {
+				try {
+	                Log.i(TAG, "正在连接蓝牙设备："+mmDevice.getName());
+	                mmSocket.connect();
+	                break;
+	            } catch (IOException e) {
+	                connectionFailed();
+	            }
+				try {
+					sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+            
             // Reset the ConnectThread because we're done
             synchronized (BluetoothChatService.this) {
                 mConnectThread = null;
@@ -526,15 +533,6 @@ public class BluetoothChatService {
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
-                    
-                    mBlueDataRecvThread.setRunning(false);
-            		mBlueDataRecvThread.repaintSatellites(new String());
-            		try {
-						mBlueDataRecvThread.join();
-					} catch (InterruptedException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
                     break;
                 }
             }

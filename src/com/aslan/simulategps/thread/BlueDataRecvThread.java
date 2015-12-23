@@ -1,5 +1,6 @@
 package com.aslan.simulategps.thread;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -119,7 +120,16 @@ public class BlueDataRecvThread extends Thread {
 		}
 	}
 
-
+	public void cancel() {
+		isRunning = false;
+		repaintSatellites(new String());
+		try {
+			join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
 	public void setRunning(boolean b) {
 		isRunning = b;
 	}
