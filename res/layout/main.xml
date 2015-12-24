@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+    
+
+<LinearLayout 
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_height="wrap_content"
     android:background="@color/white">
 	<RelativeLayout
 	    android:layout_width="fill_parent"
@@ -28,28 +33,72 @@
 	        android:layout_weight="1" 
 	    />
 	</RelativeLayout>
-	    <TextView android:id="@+id/gps_status_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"  
-        android:text="状态"/>
-        
-    <TextView android:id="@+id/lonlat_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"  
-        android:text="0 0"/>
     
     <com.aslan.simulategps.gps.SatellitesView
         android:id="@+id/satellitesView"
         android:layout_width="match_parent"
         android:layout_height="350dp" />
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        android:orientation="vertical">
+        <LinearLayout android:layout_width="match_parent"
+        	android:layout_height="wrap_content" 
+        	android:orientation="horizontal">
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="精度："/>
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="20.123254"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent"
+        	android:layout_height="wrap_content" 
+        	android:orientation="horizontal">
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="纬度："/>
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="103.123254"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent"
+        	android:layout_height="wrap_content" 
+        	android:orientation="horizontal">
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="定位质量指数："/>
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="1"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent"
+        	android:layout_height="wrap_content" 
+        	android:orientation="horizontal">
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="水平精确度："/>
+            <TextView android:layout_width="match_parent"
+        		android:layout_height="wrap_content" 
+        		android:layout_weight="1"
+        		android:text="0.5"/>
+        </LinearLayout>
+    </LinearLayout>
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/chart1"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_height="200dp"/>
     <Button android:id="@+id/ButtonSendData"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:text="发送"
         android:visibility="gone"/>
+    
 </LinearLayout>
+</ScrollView>

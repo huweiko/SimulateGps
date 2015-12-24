@@ -164,6 +164,7 @@ public class BluetoothChatService {
     public synchronized void connect(BluetoothDevice device) {
         if (D) Log.d(TAG, "connect to: " + device);
         if(device == null){
+        	setState(STATE_NONE);
         	Log.d(TAG, "蓝牙设备为空");
         	return;
         }

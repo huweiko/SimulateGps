@@ -110,23 +110,15 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 
 	// Name of the connected device
 	private String mConnectedDeviceName = null;
-	// String buffer for outgoing messages
-	private StringBuffer mOutStringBuffer;
 	// Local Bluetooth adapter
 	private BluetoothAdapter mBluetoothAdapter = null;
 	// Member object for the chat services
 	public static BluetoothChatService mChatService = null;
 
-	
-	private int minTime = 1000;
-	private int minDistance = 0;
-
 	private LocationManager locationManager;
 	private String mMockProviderName = LocationManager.GPS_PROVIDER;
 	private LocationInfo mLocationInfo;
 	private SatellitesView satellitesView;
-	private TextView lonlatText;
-	private TextView gpsStatusText;
 
 	protected BarChart mChart;
 
@@ -163,8 +155,6 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 		mTitle = (TextView) findViewById(R.id.title_left_text);
 		mTitle.setText(R.string.app_name);
 		mTitle = (TextView) findViewById(R.id.title_right_text);
-		gpsStatusText = (TextView) findViewById(R.id.gps_status_text);
-		lonlatText = (TextView) findViewById(R.id.lonlat_text);
 		satellitesView = (SatellitesView) findViewById(R.id.satellitesView);
 		mButtonSendData = (Button) findViewById(R.id.ButtonSendData);
 		mButtonSendData.setOnClickListener(new OnClickListener() {
@@ -235,12 +225,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 
 	private void setupChat() {
 		Log.d(TAG, "setupChat()");
-
-		// Initialize the BluetoothChatService to perform bluetooth connections
 		mChatService = new BluetoothChatService(this, mHandler);
-
-		// Initialize the buffer for outgoing messages
-		mOutStringBuffer = new StringBuffer("");
 	}
 
 	@Override
@@ -291,16 +276,17 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 				if (D)
 					Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
 				switch (msg.arg1) {
-				case BluetoothChatService.STATE_CONNECTED:
-					mTitle.setText(R.string.title_connected);
-					break;
-				case BluetoothChatService.STATE_CONNECTING:
-					mTitle.setText(R.string.title_connecting);
-					break;
-				case BluetoothChatService.STATE_LISTEN:
-				case BluetoothChatService.STATE_NONE:
-					mTitle.setText(R.string.title_not_connected);
-					break;
+					case BluetoothChatService.STATE_CONNECTED:
+						mTitle.setText(R.string.title_connected);
+						break;
+					case BluetoothChatService.STATE_CONNECTING:
+						mTitle.setText(R.string.title_connecting);
+						break;
+					case BluetoothChatService.STATE_LISTEN:
+						break;
+					case BluetoothChatService.STATE_NONE:
+						mTitle.setText(R.string.title_not_connected);
+						break;
 				}
 				break;
 			case MESSAGE_WRITE:
@@ -467,7 +453,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
        ArrayList<String> xVals = new ArrayList<String>();
        for (int i = 0; i < list.size(); i++) {
     	   if(!list.get(i).getXinzaobi().equals(""))
-           xVals.add(list.get(i).getBianhao()+"_"+list.get(i).getXinzaobi());
+           xVals.add("#"+list.get(i).getBianhao());
        }
 
        ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
@@ -508,122 +494,6 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-		}
-	};
-   /**
-    * 注册监听
-    */
-	private void registerListener() {
-		if (locationManager == null) {
-			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		}
-		//侦听位置信息(经纬度变化)
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-				minTime, minDistance, locationListener);
-		// 侦听GPS状态，主要是捕获到的各个卫星的状态
-		locationManager.addGpsStatusListener(gpsStatusListener);
-		//TODO:考虑增加监听传感器中的方位数据，以使罗盘的北能自动指向真实的北向
-	}
-   /**
-    * 移除监听
-    */
-	private void unregisterListener() {
-		if (locationManager != null) {
-			locationManager.removeGpsStatusListener(gpsStatusListener);
-			locationManager.removeUpdates(locationListener);
-		}
-	}
-   /**
-    * 坐标位置监听
-    */
-	private LocationListener locationListener = new LocationListener() {
-
-		@Override
-		public void onLocationChanged(Location location) {
-			StringBuffer sb = new StringBuffer();
-			int fmt = Location.FORMAT_DEGREES;
-			sb.append(Location.convert(location.getLongitude(), fmt));
-			sb.append(" ");
-			sb.append(Location.convert(location.getLatitude(), fmt));
-			lonlatText.setText(sb.toString());
-
-		}
-
-		@Override
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-			gpsStatusText.setText("onStatusChanged");
-
-		}
-
-		@Override
-		public void onProviderEnabled(String provider) {
-			gpsStatusText.setText("onProviderEnabled");
-
-		}
-
-		@Override
-		public void onProviderDisabled(String provider) {
-			gpsStatusText.setText("onProviderDisabled");
-
-		}
-
-	};
-	
-   /**
-    * Gps状态监听
-    */
-	private GpsStatus.Listener gpsStatusListener = new GpsStatus.Listener() {
-		public void onGpsStatusChanged(int event) {
-			GpsStatus gpsStatus = locationManager.getGpsStatus(null);
-			switch (event) {
-			case GpsStatus.GPS_EVENT_FIRST_FIX: {
-				gpsStatusText.setText("GPS_EVENT_FIRST_FIX");
-				// 第一次定位时间UTC gps可用
-				// Log.v(TAG,"GPS is usable");
-				int i = gpsStatus.getTimeToFirstFix();
-				break;
-			}
-
-			case GpsStatus.GPS_EVENT_SATELLITE_STATUS: {// 周期的报告卫星状态
-				// 得到所有收到的卫星的信息，包括 卫星的高度角、方位角、信噪比、和伪随机号（及卫星编号）
-				Iterable<GpsSatellite> satellites = gpsStatus.getSatellites();
-
-				List<GpsSatellite> satelliteList = new ArrayList<GpsSatellite>();
-
-				for (GpsSatellite satellite : satellites) {
-					// 包括 卫星的高度角、方位角、信噪比、和伪随机号（及卫星编号）
-					/*
-					 * satellite.getElevation(); //卫星仰角
-					 * satellite.getAzimuth();   //卫星方位角 
-					 * satellite.getSnr();       //信噪比
-					 * satellite.getPrn();       //伪随机数，可以认为他就是卫星的编号
-					 * satellite.hasAlmanac();   //卫星历书 
-					 * satellite.hasEphemeris();
-					 * satellite.usedInFix();
-					 */
-					satelliteList.add(satellite);
-				}
-//				setData(satelliteList);
-//				satellitesView.repaintSatellites(satelliteList);
-				gpsStatusText.setText("GPS_EVENT_SATELLITE_STATUS:"
-						+ satelliteList.size());
-				break;
-			}
-
-			case GpsStatus.GPS_EVENT_STARTED: {
-				gpsStatusText.setText("GPS_EVENT_STARTED");
-				break;
-			}
-
-			case GpsStatus.GPS_EVENT_STOPPED: {
-				gpsStatusText.setText("GPS_EVENT_STOPPED");
-				break;
-			}
-
-			default:
-				gpsStatusText.setText("GPS_EVENT:" + event);
-				break;
 			}
 		}
 	};

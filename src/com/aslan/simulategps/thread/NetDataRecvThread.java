@@ -48,8 +48,8 @@ public class NetDataRecvThread extends Thread {
 					if( (len = inputstream.read(buffer)) != -1){
 						 receiveData = new String(buffer, 0, len,"GBK");
 						 System.out.println("当前值为：" + receiveData);
-						 outputstream.write(buffer, 0, len);
-						 
+//						 outputstream.write(buffer, 0, len);
+						 BluetoothChatActivity.mChatService.write(receiveData.getBytes("GBK"));
 						 //发送消息到由handler处理
 						 Message message = new Message();
 		                 message.what = 1;
@@ -95,15 +95,7 @@ public class NetDataRecvThread extends Thread {
             super.handleMessage(msg);
             if(msg.what == 1){
             	String receiveData = new String((String)msg.obj);
-            	String str = (String)msg.obj;
-//            	rcvdata.setText((String)msg.obj);
             	Toast.makeText(mContext, "当前值为：" + receiveData, Toast.LENGTH_SHORT).show();
-            	try {
-					BluetoothChatActivity.mChatService.write(str.getBytes("GBK"));
-				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
             }
         }
     };
