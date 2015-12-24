@@ -1,26 +1,17 @@
 package com.aslan.simulategps.thread;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import com.aslan.simulategps.activity.BluetoothChatActivity;
 import com.aslan.simulategps.bean.GPGGA;
 import com.aslan.simulategps.bean.GPRMC;
 import com.aslan.simulategps.bean.GSV;
 import com.aslan.simulategps.bean.LocationInfo;
-
 import android.content.Context;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
-import android.provider.Settings;
 import android.util.Log;
 
 public class BlueDataRecvThread extends Thread {

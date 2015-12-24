@@ -163,7 +163,10 @@ public class BluetoothChatService {
      */
     public synchronized void connect(BluetoothDevice device) {
         if (D) Log.d(TAG, "connect to: " + device);
-
+        if(device == null){
+        	Log.d(TAG, "蓝牙设备为空");
+        	return;
+        }
         // Cancel any thread attempting to make a connection
         if (mState == STATE_CONNECTING) {
             if (mConnectThread != null) {mConnectThread.cancel(); mConnectThread = null;}

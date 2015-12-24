@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.BluetoothChat.BluetoothChatService;
 import com.aslan.simulategps.activity.DeviceListActivity;
@@ -29,10 +28,8 @@ import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.base.MyYAxisValueFormatter;
 import com.aslan.simulategps.bean.GSV;
 import com.aslan.simulategps.bean.LocationInfo;
-import com.aslan.simulategps.bean.Constant.Preference;
 import com.aslan.simulategps.gps.SatellitesView;
 import com.aslan.simulategps.thread.CheckThread;
-import com.aslan.simulategps.thread.NetCheckThread;
 import com.aslan.simulategps.thread.NetDataRecvThread;
 import com.aslan.simulategps.utils.AssetUtils;
 import com.github.mikephil.charting.charts.BarChart;
@@ -47,7 +44,6 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.YAxisValueFormatter;
-
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;

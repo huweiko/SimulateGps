@@ -1,22 +1,14 @@
 package com.aslan.simulategps.activity;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.util.Date;
-
 import com.aslan.simulategps.R;
 import com.aslan.simulategps.base.BaseActivity;
 import com.aslan.simulategps.bean.Constant.Preference;
 import com.aslan.simulategps.thread.NetCheckThread;
-
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
