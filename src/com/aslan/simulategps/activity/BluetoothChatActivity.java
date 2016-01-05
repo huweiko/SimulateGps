@@ -536,6 +536,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 	 						  mHandler.sendEmptyMessage(MESSAGE_INIT_LOCATION);
 	 					   }else{
 	 						  setLocation(mLocationInfo);
+	 						  Log.i("当前经纬度", mLocationInfo.getLatitude()+","+mLocationInfo.getLongitude());
 	 					   }
 				       }
 	 				   Thread.sleep(500);

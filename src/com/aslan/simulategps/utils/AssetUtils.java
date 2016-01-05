@@ -46,4 +46,15 @@ public class AssetUtils {
 		}
 		return state;
 	}
+	//把GPGGA格式转化成十进制表示
+	public static Double GGAToDouble(String GGA){
+		if(GGA == null || GGA.equals("")){
+			return 0.0;
+		}
+		int a = GGA.indexOf(".");
+		String du = GGA.substring(0, a-2);
+		String fen = GGA.substring(a-2);
+		Double result = Double.parseDouble(du) + Double.parseDouble(fen)/60;
+		return result;
+	}
 }
