@@ -15,7 +15,7 @@ public class CheckThread extends Thread {
 	
 	@Override
 	public void run() {	
-		int i = 180;
+		int i = 360;
 		while (i-- > 0) {
 			try {
 				sleep(5000);

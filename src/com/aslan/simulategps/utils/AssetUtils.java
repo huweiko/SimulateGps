@@ -3,6 +3,7 @@ package com.aslan.simulategps.utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.text.DecimalFormat;
 
 import org.apache.http.util.EncodingUtils;
 
@@ -54,7 +55,9 @@ public class AssetUtils {
 		int a = GGA.indexOf(".");
 		String du = GGA.substring(0, a-2);
 		String fen = GGA.substring(a-2);
+		 
 		Double result = Double.parseDouble(du) + Double.parseDouble(fen)/60;
-		return result;
+		DecimalFormat df = new DecimalFormat(".########");  
+		return Double.parseDouble(df.format(result));
 	}
 }

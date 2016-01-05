@@ -128,6 +128,7 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
     };
 	
     public static NetDataRecvThread mNetDataRecvThread;
+    TextView mTextViewLo,mTextViewLa;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -155,6 +156,9 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 		mTitle = (TextView) findViewById(R.id.title_left_text);
 		mTitle.setText(R.string.app_name);
 		mTitle = (TextView) findViewById(R.id.title_right_text);
+		mTextViewLa = (TextView) findViewById(R.id.TextViewLa);
+		mTextViewLo = (TextView) findViewById(R.id.TextViewLo);
+		
 		satellitesView = (SatellitesView) findViewById(R.id.satellitesView);
 		mButtonSendData = (Button) findViewById(R.id.ButtonSendData);
 		mButtonSendData.setOnClickListener(new OnClickListener() {
@@ -323,6 +327,8 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 				break;
 			case MESSAGE_LOCATION:
 				mLocationInfo = (LocationInfo) msg.obj;
+				mTextViewLa.setText("纬度："+mLocationInfo.getLatitude());
+				mTextViewLo.setText("经度："+mLocationInfo.getLongitude());
 				break;
 			case MESSAGE_INIT_LOCATION:
 				initLocation();
@@ -332,7 +338,18 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 						"测试版试用时间到，请联系相关人员", Toast.LENGTH_SHORT)
 						.show();
 				break;
+			case 100002:
+				Toast.makeText(getApplicationContext(),
+						"位置发生变化，正在模拟定位", Toast.LENGTH_SHORT)
+						.show();
+				break;
+			case 100003:
+				Toast.makeText(getApplicationContext(),
+						"您的模拟位置没有打开，请设置允许模拟位置", Toast.LENGTH_SHORT)
+						.show();
+				break;
 			}
+			
 			
 		}
 	};
@@ -522,8 +539,6 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 		location.setLongitude(locationInfo.getLongitude());
 		location.setAltitude(Float.parseFloat(locationInfo.getHeight()));
 		location.setAccuracy(Float.parseFloat(locationInfo.getLevelAccuracy()));
-		location.setBearing(180.00f);
-		location.setSpeed(200f);
 		locationManager.setTestProviderLocation(mMockProviderName, location);
 	}
 	//虚拟定位线程
@@ -531,13 +546,19 @@ public class BluetoothChatActivity extends BaseActivity implements LocationListe
 	 	   public void run(){
 	 		   while(true){
 	 			   try {
-	 				   if(Settings.Secure.getInt(getContentResolver(),Settings.Secure.ALLOW_MOCK_LOCATION, 0) != 0 && (mLocationInfo != null)){
+	 				   if(Settings.Secure.getInt(getContentResolver(),Settings.Secure.ALLOW_MOCK_LOCATION, 0) != 0){
 	 					   if(locationManager == null){
 	 						  mHandler.sendEmptyMessage(MESSAGE_INIT_LOCATION);
 	 					   }else{
-	 						  setLocation(mLocationInfo);
-	 						  Log.i("当前经纬度", mLocationInfo.getLatitude()+","+mLocationInfo.getLongitude());
+	 						   if(mLocationInfo != null){
+	 							  setLocation(mLocationInfo);
+		 						  Log.i("当前经纬度", mLocationInfo.getLatitude()+","+mLocationInfo.getLongitude());  
+	 						   }
+		 						  
 	 					   }
+				       }else{
+				    	   mHandler.sendEmptyMessage(100003);
+				    	   Thread.sleep(10000);
 				       }
 	 				   Thread.sleep(500);
 					} catch (InterruptedException e) {

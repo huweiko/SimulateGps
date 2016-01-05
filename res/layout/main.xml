@@ -36,32 +36,24 @@
     <LinearLayout android:layout_width="match_parent"
         android:layout_height="wrap_content" 
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="visible">
         <LinearLayout android:layout_width="match_parent"
         	android:layout_height="wrap_content" 
         	android:orientation="horizontal">
-            <TextView android:layout_width="match_parent"
-        		android:layout_height="wrap_content" 
-        		android:layout_weight="1"
-        		android:text="精度："/>
-            <TextView android:layout_width="match_parent"
-        		android:layout_height="wrap_content" 
-        		android:layout_weight="1"
-        		android:text="20.123254"/>
-        </LinearLayout>
-        <LinearLayout android:layout_width="match_parent"
-        	android:layout_height="wrap_content" 
-        	android:orientation="horizontal">
-            <TextView android:layout_width="match_parent"
+            <TextView 
+                android:id="@+id/TextViewLa"
+                android:layout_width="match_parent"
         		android:layout_height="wrap_content" 
         		android:layout_weight="1"
         		android:text="纬度："/>
-            <TextView android:layout_width="match_parent"
+            <TextView 
+                android:id="@+id/TextViewLo"
+                android:layout_width="match_parent"
         		android:layout_height="wrap_content" 
         		android:layout_weight="1"
-        		android:text="103.123254"/>
+        		android:text="经度："/>
         </LinearLayout>
-        <LinearLayout android:layout_width="match_parent"
+<!--         <LinearLayout android:layout_width="match_parent"
         	android:layout_height="wrap_content" 
         	android:orientation="horizontal">
             <TextView android:layout_width="match_parent"
@@ -84,7 +76,7 @@
         		android:layout_height="wrap_content" 
         		android:layout_weight="1"
         		android:text="0.5"/>
-        </LinearLayout>
+        </LinearLayout> -->
     </LinearLayout>
 
     <com.github.mikephil.charting.charts.BarChart
